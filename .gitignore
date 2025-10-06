@@ -1,0 +1,6 @@
+gui/__pycache__/
+env/
+backend/board.egg-info/
+backend/build/
+backend/dist/
+

@@ -2,7 +2,7 @@
 #define BOARD
 
 
-#include "defines.hpp"
+#include "constants.hpp"
 
 #include <cstdint>
 #include <string>

@@ -94,13 +94,13 @@ namespace magic{
     };
 
     
-    template<Piece p>
+    template<PieceType p>
     constexpr std::size_t attack_table_size(){
-        static_assert(p == Piece::ROOK | p == Piece::BISHOP | p == Piece::KNIGHT);
-        if constexpr(p == Piece::ROOK){
+        static_assert(p == PieceType::ROOK | p == PieceType::BISHOP | p == PieceType::KNIGHT);
+        if constexpr(p == PieceType::ROOK){
             return 102400;
         }
-        else if constexpr(p == Piece::BISHOP){
+        else if constexpr(p == PieceType::BISHOP){
             return 5248;
         } 
         else{
@@ -112,14 +112,14 @@ namespace magic{
         return magic_info.offset + ((bitboard * magic_info.magic) >> magic_info.shift);
     }
 
-    template<Piece p> 
+    template<PieceType p> 
     constexpr std::array<std::uint64_t, attack_table_size<p>()> populate_table(){
         std::array<std::uint64_t, attack_table_size<p>()> table{};
         constexpr auto dirs = moves::get_directions<p>();
         constexpr auto dir1 = dirs[0], dir2 = dirs[1], dir3 = dirs[2], dir4 = dirs[3];
         int i = 0;
         for(std::uint64_t pos = 1; pos; pos <<= 1, i++){
-            const MagicInfo& magic_info = (p == Piece::ROOK) ? rook_magics[i] : bishop_magics[i]; 
+            const MagicInfo& magic_info = (p == PieceType::ROOK) ? rook_magics[i] : bishop_magics[i]; 
             for(std::uint64_t u = moves::internal_move<dir1>(pos); ; u = moves::internal_move<dir1>(u)){
                 for(std::uint64_t r = moves::internal_move<dir2>(pos); ; r = moves::internal_move<dir2>(r)){
                     for(std::uint64_t d = moves::internal_move<dir3>(pos); ; d = moves::internal_move<dir3>(d)){
@@ -149,7 +149,7 @@ namespace magic{
     }
 
     template<>
-    constexpr std::array<std::uint64_t, attack_table_size<Piece::KNIGHT>()> populate_table<Piece::KNIGHT>(){
+    constexpr std::array<std::uint64_t, attack_table_size<PieceType::KNIGHT>()> populate_table<PieceType::KNIGHT>(){
         std::array<std::uint64_t, 64> table;
         constexpr std::array<moves::Direction, 8> shifts = 
         {moves::K1, moves::K2, moves::K3, moves::K4, moves::K5, moves::K6, moves::K7, moves::K8};
@@ -164,9 +164,9 @@ namespace magic{
         return table;
     }
 
-    constexpr std::array<std::uint64_t, attack_table_size<Piece::ROOK>()> rook_attacks = populate_table<Piece::ROOK>();
-    constexpr std::array<std::uint64_t, attack_table_size<Piece::BISHOP>()> bishop_attacks = populate_table<Piece::BISHOP>();
-    constexpr std::array<std::uint64_t, attack_table_size<Piece::KNIGHT>()> knight_attacks = populate_table<Piece::KNIGHT>();
+    constexpr std::array<std::uint64_t, attack_table_size<PieceType::ROOK>()> rook_attacks = populate_table<PieceType::ROOK>();
+    constexpr std::array<std::uint64_t, attack_table_size<PieceType::BISHOP>()> bishop_attacks = populate_table<PieceType::BISHOP>();
+    constexpr std::array<std::uint64_t, attack_table_size<PieceType::KNIGHT>()> knight_attacks = populate_table<PieceType::KNIGHT>();
 }
 
 //Indices for each piece in white/black attributes in the Board class

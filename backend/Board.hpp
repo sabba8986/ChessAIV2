@@ -1,9 +1,8 @@
 #ifndef Board
 #define BOARD
 
-
 #include "constants.hpp"
-
+#include "Piece.hpp"
 #include <cstdint>
 #include <string>
 
@@ -15,9 +14,8 @@ class Board{
 
 public:
     Board();
-
-    const char *board_as_string(); 
-
+    
+    const char *board_as_string();
 };
 
 

@@ -1,4 +1,4 @@
-#include "defines.hpp"
+#include "constants.hpp"
 #include "Board.hpp"
 
 #include <string>
@@ -66,4 +66,10 @@ const char *Board::board_as_string(){
         }
     } 
     return board_as_string;
+}
+
+
+std::uint64_t Board::all_attacks(int sq){
+    if(){
+    }
 }

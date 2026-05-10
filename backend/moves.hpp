@@ -88,10 +88,10 @@ namespace moves{
     }
 
     
-    template<Piece p>
+    template<PieceType p>
     constexpr std::array<Direction, 4> get_directions(){
-        static_assert(p == Piece::ROOK | p == Piece::BISHOP);
-        if constexpr(p == Piece::ROOK){
+        static_assert(p == PieceType::ROOK | p == PieceType::BISHOP);
+        if constexpr(p == PieceType::ROOK){
             return {N, E, S, W};
         }
         else{
@@ -99,9 +99,9 @@ namespace moves{
         }   
     }
 
-    template<Piece p>
+    template<PieceType p>
     constexpr std::uint64_t get_attack(std::uint64_t pos, std::uint64_t occupancy){
-        static_assert(p == Piece::ROOK | p == Piece::BISHOP);
+        static_assert(p == PieceType::ROOK | p == PieceType::BISHOP);
         constexpr auto dirs = get_directions<p>();
         constexpr auto d1 = dirs[0], d2 = dirs[1], d3 = dirs[2], d4 = dirs[3];
         std::uint64_t attack = 0;

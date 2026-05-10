@@ -14,8 +14,18 @@ namespace moves{
         S = -8, 
         SW = -7, 
         W = 1, 
-        NW = 9
+        NW = 9,
+        K1 = -10, 
+        K2 = 6, 
+        K3 = 15, 
+        K4 = 17,
+        K5 = 10, 
+        K6 = -6, 
+        K7 = -15,
+        K8 = -17
     };
+
+
 
     constexpr std::uint64_t up_edge{18374686479671623680u};
     constexpr std::uint64_t down_edge{255};
@@ -77,33 +87,34 @@ namespace moves{
         return ray<dir>(pos) & ~edge<dir>();
     }
 
+    
     template<Piece p>
     constexpr std::array<Direction, 4> get_directions(){
         static_assert(p == Piece::ROOK | p == Piece::BISHOP);
         if constexpr(p == Piece::ROOK){
             return {N, E, S, W};
         }
-        else {
+        else{
             return {NE, SE, SW, NW};
-        }  
+        }   
     }
 
     template<Piece p>
-    constexpr std::uint64_t get_attack_from_blockers(std::uint64_t pos, std::uint64_t occupancy){
+    constexpr std::uint64_t get_attack(std::uint64_t pos, std::uint64_t occupancy){
         static_assert(p == Piece::ROOK | p == Piece::BISHOP);
         constexpr auto dirs = get_directions<p>();
         constexpr auto d1 = dirs[0], d2 = dirs[1], d3 = dirs[2], d4 = dirs[3];
         std::uint64_t attack = 0;
-        for(std::uint64_t a = move<d1>(pos); a && !(a & occupancy); a = move<d1>(a)){
+        for(std::uint64_t a = shift<d1>(pos); a && !(a & occupancy); a = shift<d1>(a)){
             attack |= a;
         }
-        for(std::uint64_t a = move<d2>(pos); a && !(a & occupancy); a = move<d2>(a)){
+        for(std::uint64_t a = shift<d2>(pos); a && !(a & occupancy); a = shift<d2>(a)){
             attack |= a;
         }
-        for(std::uint64_t a = move<d3>(pos); a && !(a & occupancy); a = move<d3>(a)){
+        for(std::uint64_t a = shift<d3>(pos); a && !(a & occupancy); a = shift<d3>(a)){
             attack |= a;
         }
-        for(std::uint64_t a = move<d4>(pos); a && !(a & occupancy); a = move<d4>(a)){
+        for(std::uint64_t a = shift<d4>(pos); a && !(a & occupancy); a = shift<d4>(a)){
             attack |= a;
         }
         return attack; 

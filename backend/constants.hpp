@@ -2,6 +2,8 @@
 #define DEFINES 
 #include<array>
 #include<cstdint>
+#include "moves.hpp"
+#include "Piece.hpp"
 
 struct MagicInfo{
     std::uint64_t mask;
@@ -80,6 +82,91 @@ namespace magic{
             {1075975168ull, 583251903589130280ull, 59, 5088}, {275415828992ull, 13983698835519709700ull, 59, 5120}, 
             {70506452091904ull, 565166224474624ull, 59, 5152}, {18049651735527936ull, 234189431337255952ull, 58, 5184}}
     };
+    constexpr std::array<std::uint64_t, 8> knight_direction_valid = {
+        18229723555195321344u,
+        71209857637481724u,
+        280371153272574u, 
+        140185576636287u,
+        17802464409370431u,
+        4557430888798830336u,
+        9187201950435704832u, 
+        18374403900871409664u
+    };
+
+    
+    template<Piece p>
+    constexpr std::size_t attack_table_size(){
+        static_assert(p == Piece::ROOK | p == Piece::BISHOP | p == Piece::KNIGHT);
+        if constexpr(p == Piece::ROOK){
+            return 102400;
+        }
+        else if constexpr(p == Piece::BISHOP){
+            return 5248;
+        } 
+        else{
+            return 64;
+        }
+    }
+
+    constexpr std::uint32_t get_index(std::uint64_t bitboard, const MagicInfo& magic_info){
+        return magic_info.offset + ((bitboard * magic_info.magic) >> magic_info.shift);
+    }
+
+    template<Piece p> 
+    constexpr std::array<std::uint64_t, attack_table_size<p>()> populate_table(){
+        std::array<std::uint64_t, attack_table_size<p>()> table{};
+        constexpr auto dirs = moves::get_directions<p>();
+        constexpr auto dir1 = dirs[0], dir2 = dirs[1], dir3 = dirs[2], dir4 = dirs[3];
+        int i = 0;
+        for(std::uint64_t pos = 1; pos; pos <<= 1, i++){
+            const MagicInfo& magic_info = (p == Piece::ROOK) ? rook_magics[i] : bishop_magics[i]; 
+            for(std::uint64_t u = moves::internal_move<dir1>(pos); ; u = moves::internal_move<dir1>(u)){
+                for(std::uint64_t r = moves::internal_move<dir2>(pos); ; r = moves::internal_move<dir2>(r)){
+                    for(std::uint64_t d = moves::internal_move<dir3>(pos); ; d = moves::internal_move<dir3>(d)){
+                        for(std::uint64_t l = moves::internal_move<dir4>(pos); ; l = moves::internal_move<dir4>(l)){
+                            std::uint64_t blockers = u | r | d | l;
+                            std::uint64_t all_behind_pieces = 
+                                moves::internal_ray<dir1>(u) | 
+                                moves::internal_ray<dir2>(r) | 
+                                moves::internal_ray<dir3>(d) | 
+                                moves::internal_ray<dir4>(l);
+                            std::uint64_t attack = moves::get_attack<p>(pos, blockers);
+                            for(std::uint64_t cur_behind = all_behind_pieces; ; cur_behind = (cur_behind - 1) & all_behind_pieces){
+                                std::uint64_t cur_board = cur_behind | blockers;
+                                table[get_index(cur_board, magic_info)] = attack;
+                                if(!cur_behind) break;
+                            }
+                            if(!l) break;
+                        }
+                        if(!d) break;
+                    }
+                    if(!r) break;
+                }
+                if(!u) break;
+            }
+        }
+        return table;
+    }
+
+    template<>
+    constexpr std::array<std::uint64_t, attack_table_size<Piece::KNIGHT>()> populate_table<Piece::KNIGHT>(){
+        std::array<std::uint64_t, 64> table;
+        constexpr std::array<moves::Direction, 8> shifts = 
+        {moves::K1, moves::K2, moves::K3, moves::K4, moves::K5, moves::K6, moves::K7, moves::K8};
+        int i = 0;
+        for(std::uint64_t pos = 1; pos; pos <<= 1, i++){
+            std::uint64_t attack = 0;
+            for(int j = 0; j < 8; j++){
+                if(pos & knight_direction_valid[j]) attack |= shifts[j];
+            }
+            table[i] = attack;
+        }
+        return table;
+    }
+
+    constexpr std::array<std::uint64_t, attack_table_size<Piece::ROOK>()> rook_attacks = populate_table<Piece::ROOK>();
+    constexpr std::array<std::uint64_t, attack_table_size<Piece::BISHOP>()> bishop_attacks = populate_table<Piece::BISHOP>();
+    constexpr std::array<std::uint64_t, attack_table_size<Piece::KNIGHT>()> knight_attacks = populate_table<Piece::KNIGHT>();
 }
 
 //Indices for each piece in white/black attributes in the Board class
@@ -100,6 +187,8 @@ namespace magic{
 #define KNIGHT_7_VALID 9187201950435704832ULL //2 down, 1 left
 #define KNIGHT_8_VALID 18374403900871409664ULL //2 down, 1 right
   
+
+
 //Sets the initial positions for each piece type
 #define INIT_BLACK_ROOKS 9295429630892703744ULL
 #define INIT_BLACK_KNIGHTS 4755801206503243776ULL

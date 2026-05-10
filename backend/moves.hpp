@@ -1,7 +1,8 @@
 #ifndef MOVES
 #define MOVES
-#include<cstdint>
-
+#include <cstdint>
+#include <array>
+#include "Piece.hpp"
 
 
 namespace moves{
@@ -74,6 +75,38 @@ namespace moves{
     template<Direction dir>
     constexpr std::uint64_t internal_ray(std::uint64_t pos){
         return ray<dir>(pos) & ~edge<dir>();
+    }
+
+    template<Piece p>
+    constexpr std::array<Direction, 4> get_directions(){
+        static_assert(p == Piece::ROOK | p == Piece::BISHOP);
+        if constexpr(p == Piece::ROOK){
+            return {N, E, S, W};
+        }
+        else {
+            return {NE, SE, SW, NW};
+        }  
+    }
+
+    template<Piece p>
+    constexpr std::uint64_t get_attack_from_blockers(std::uint64_t pos, std::uint64_t occupancy){
+        static_assert(p == Piece::ROOK | p == Piece::BISHOP);
+        constexpr auto dirs = get_directions<p>();
+        constexpr auto d1 = dirs[0], d2 = dirs[1], d3 = dirs[2], d4 = dirs[3];
+        std::uint64_t attack = 0;
+        for(std::uint64_t a = move<d1>(pos); a && !(a & occupancy); a = move<d1>(a)){
+            attack |= a;
+        }
+        for(std::uint64_t a = move<d2>(pos); a && !(a & occupancy); a = move<d2>(a)){
+            attack |= a;
+        }
+        for(std::uint64_t a = move<d3>(pos); a && !(a & occupancy); a = move<d3>(a)){
+            attack |= a;
+        }
+        for(std::uint64_t a = move<d4>(pos); a && !(a & occupancy); a = move<d4>(a)){
+            attack |= a;
+        }
+        return attack; 
     }
 };
 

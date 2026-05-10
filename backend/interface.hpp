@@ -2,14 +2,13 @@
 #define INTERFACE 
 
 
-#include "Board.hpp"
-#include <string>
+#include "Piece.hpp"
 
 
 extern "C"{
     void create_board();
 
-    const char *get_board_state();
+    Piece *get_board_state();
 }
 
 #endif

@@ -20,56 +20,7 @@ Board::Board(){
     black[KING_INDEX] = INIT_BLACK_KING;
 }
 
-const char *Board::board_as_string(){
-    char *board_as_string = new char[64]; 
-
-    std::uint64_t cur_piece = BITBOARD_TOP_LEFT;
-    for(int i = 0; i < 64; i++, cur_piece >>= 1){
-        if(cur_piece & white[KING_INDEX]){
-            board_as_string[i] = 'K';
-        }
-        else if(cur_piece & white[QUEEN_INDEX]){
-            board_as_string[i] = 'Q';
-        }
-        else if(cur_piece & white[KNIGHT_INDEX]){
-            board_as_string[i] = 'N';
-        }
-        else if(cur_piece & white[BISHOP_INDEX]){
-            board_as_string[i] = 'B';
-        }
-        else if(cur_piece & white[ROOK_INDEX]){
-            board_as_string[i] = 'R';
-        }
-        else if(cur_piece & white[PAWN_INDEX]){
-            board_as_string[i] = 'P';
-        }
-        else if(cur_piece & black[KING_INDEX]){
-            board_as_string[i] = 'k';
-        }
-        else if(cur_piece & black[QUEEN_INDEX]){
-            board_as_string[i] = 'q';
-        }
-        else if(cur_piece & black[KNIGHT_INDEX]){
-            board_as_string[i] = 'n';
-        }
-        else if(cur_piece & black[ROOK_INDEX]){
-            board_as_string[i] = 'r';
-        }
-        else if(cur_piece & black[BISHOP_INDEX]){
-            board_as_string[i] = 'b';
-        }
-        else if(cur_piece & black[PAWN_INDEX]){
-            board_as_string[i] = 'p';
-        } 
-        else{
-            board_as_string[i] = '_';
-        }
-    } 
-    return board_as_string;
+Piece *Board::layout(){
+    return this->pieces.data();
 }
 
-
-std::uint64_t Board::all_attacks(int sq){
-    if(){
-    }
-}

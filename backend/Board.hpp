@@ -12,10 +12,10 @@ class Board{
     std::uint64_t white[6];
     std::uint64_t black[6];
 
+    std::array<Piece, 64> pieces;
 public:
     Board();
-    
-    const char *board_as_string();
+    Piece *layout();
 };
 
 

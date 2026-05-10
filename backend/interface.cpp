@@ -1,6 +1,5 @@
 #include "interface.hpp"
-#include <memory>
-#include <string>
+#include "Board.hpp"
 
 Board *current_board = nullptr;
 
@@ -9,7 +8,7 @@ void create_board(){
     current_board = new Board();
 }
 
-const char *get_board_state(){
-    return current_board->board_as_string();
+Piece *get_board_state(){
+    return current_board->layout();
 }
 

@@ -6,6 +6,4 @@ build-backend = "setuptools.build_meta"
 name = "board-interface"
 version = "0.0.1"
 
-[tool.setuptools]
-ext-modules = [{name = "board", sources = ["Boardmodule.c", "interface.cpp", "Board.cpp"], extra-compile-args = ["-std=c++23"]}]
 

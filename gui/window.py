@@ -1,5 +1,5 @@
 from PySide6 import QtCore, QtWidgets, QtGui
-import board
+import board 
 
 PIECE_TO_ICON = None
 

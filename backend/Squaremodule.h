@@ -27,8 +27,13 @@ static PyObject *Square_new(PyTypeObject *type, PyObject *args, PyObject *kwds){
 
 static int Square_init(PyObject* o, PyObject *args, PyObject *kwds){
     SquareObject *square = (SquareObject*)o;
-    square->type = -1;
-    square->is_white = false;
+    int type;
+    bool is_white;
+    if(!PyArg_ParseTuple(args, "ip", &type, &is_white)){
+        return -1;
+    }
+    square->type = type;
+    square->is_white = is_white;
     return 0;
 }
 

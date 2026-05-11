@@ -3,3 +3,4 @@ env/
 backend/board_interface.egg-info/
 backend/build/
 backend/dist/
+gui/__pycache__/

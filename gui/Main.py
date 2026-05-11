@@ -7,8 +7,6 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication([])
     window = Window()
     window.setFixedSize(1000, 800)
-    x = get_board_state()
-    print(x)
     window.show()
 
     sys.exit(app.exec())

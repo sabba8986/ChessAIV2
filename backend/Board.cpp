@@ -1,8 +1,6 @@
 #include "constants.hpp"
 #include "Board.hpp"
 
-#include <string>
-#include <iostream>
 
 Board::Board(){
     white = defaults::white_init;

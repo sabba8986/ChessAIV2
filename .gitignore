@@ -1,6 +1,5 @@
-gui/__pycache__/
 env/
-backend/board.egg-info/
+.clangd
+backend/board_interface.egg-info/
 backend/build/
 backend/dist/
-

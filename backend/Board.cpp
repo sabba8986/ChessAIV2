@@ -7,7 +7,7 @@ Board::Board(){
     black = defaults::black_init;
 }
 
-Piece *Board::layout(){
-    return this->pieces.data();
+const std::array<Piece, 64>& Board::layout() const{
+    return this->pieces;
 }
 

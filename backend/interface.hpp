@@ -1,14 +1,14 @@
 #ifndef INTERFACE 
 #define INTERFACE 
-
+#include <stddef.h>
 
 #include "Piece.hpp"
 
 
 extern "C"{
     void create_board();
-
-    Piece *get_board_state();
+    int type_of_piece(int i);
+    bool is_white_piece(int i);
 }
 
 #endif

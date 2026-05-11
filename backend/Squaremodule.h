@@ -54,7 +54,7 @@ static PyTypeObject squareType = {
 };
 
 
-static int square_module_exec(PyObject *m){
+static int square_exec(PyObject *m){
     if(PyType_Ready(&squareType) < 0){
         return -1;
     }
@@ -63,24 +63,4 @@ static int square_module_exec(PyObject *m){
     }
     return 0;
 }
-
-static PyModuleDef_Slot square_module_slots[] = {
-    {Py_mod_exec, square_module_exec},
-    {Py_mod_multiple_interpreters, Py_MOD_MULTIPLE_INTERPRETERS_NOT_SUPPORTED},
-    {0, NULL}
-};
-
-static PyModuleDef square_module = {
-    .m_base = PyModuleDef_HEAD_INIT, 
-    .m_name = "square",
-    .m_doc = "Square module that defines a Square object, used to render the board.",
-    .m_size = 0, 
-    .m_slots = square_module_slots
-};
-
-PyMODINIT_FUNC PyInit_square(void){
-    return PyModuleDef_Init(&square_module);
-}
-
-#endif
 

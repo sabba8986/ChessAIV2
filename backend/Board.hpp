@@ -14,7 +14,7 @@ class Board{
     std::array<Piece, 64> pieces;
 public:
     Board();
-    Piece *layout();
+    const std::array<Piece, 64>& layout() const;
 };
 
 

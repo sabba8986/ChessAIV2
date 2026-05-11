@@ -8,7 +8,10 @@ void create_board(){
     current_board = new Board();
 }
 
-Piece *get_board_state(){
-    return current_board->layout();
+int type_of_piece(int i){
+    return static_cast<int>((current_board->layout())[i].type);
 }
 
+bool is_white_piece(int i){
+    return (current_board->layout())[i].is_white;
+}

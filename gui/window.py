@@ -1,6 +1,6 @@
 from PySide6 import QtCore, QtWidgets, QtGui
 import board 
-from constants import PIECES, TILE_STYLE, BROWN, WHITE
+from constants import ICONS, TILE_STYLE, BROWN, WHITE
 
 class Tile(QtWidgets.QPushButton): 
     def __init__(self, window: QtWidgets.QWidget, pos: tuple[int, int]):
@@ -45,11 +45,11 @@ class Window(QtWidgets.QWidget):
 
     def renderBoardPieces(self, boardState): 
         index = 0
-        for i in range(7, -1, -1):
-            for j in range(7, -1, -1):
+        for i in range(0, 8):
+            for j in range(0, 8):
                 piece = boardState[index]
                 tile = self.tileLayout.itemAtPosition(i, j).widget() 
-                tile.setIcon(PIECES[1 if piece.is_white else 0][piece.type])  
+                tile.setIcon(ICONS[piece])  
                 index += 1
      
 

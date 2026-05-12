@@ -1,22 +1,20 @@
 from PySide6.QtGui import QIcon
 
-PIECES = [[
-    QIcon(),
-    QIcon("../assets/icons/pieces/black_pawn.svg"),
-    QIcon("../assets/icons/pieces/black_rook.svg"),
-    QIcon("../assets/icons/pieces/black_knight.svg"),
-    QIcon("../assets/icons/pieces/black_bishop.svg"),
-    QIcon("../assets/icons/pieces/black_queen.svg"),
-    QIcon("../assets/icons/pieces/black_king.svg")
-    ], [
-    QIcon(),
-    QIcon("../assets/icons/pieces/white_pawn.svg"),
-    QIcon("../assets/icons/pieces/white_rook.svg"),
-    QIcon("../assets/icons/pieces/white_knight.svg"),
-    QIcon("../assets/icons/pieces/white_bishop.svg"),
-    QIcon("../assets/icons/pieces/white_queen.svg"),
-    QIcon("../assets/icons/pieces/white_king.svg")
-]]
+ICONS = {
+    "_": QIcon(),
+    "p": QIcon("../assets/icons/pieces/black_pawn.svg"),
+    "r": QIcon("../assets/icons/pieces/black_rook.svg"),
+    "n": QIcon("../assets/icons/pieces/black_knight.svg"),
+    "b": QIcon("../assets/icons/pieces/black_bishop.svg"),
+    "q": QIcon("../assets/icons/pieces/black_queen.svg"),
+    "k": QIcon("../assets/icons/pieces/black_king.svg"),
+    "P": QIcon("../assets/icons/pieces/white_pawn.svg"),
+    "R": QIcon("../assets/icons/pieces/white_rook.svg"),
+    "N": QIcon("../assets/icons/pieces/white_knight.svg"),
+    "B": QIcon("../assets/icons/pieces/white_bishop.svg"),
+    "Q": QIcon("../assets/icons/pieces/white_queen.svg"),
+    "K": QIcon("../assets/icons/pieces/white_king.svg")
+}
 
 BROWN = "#B88B4A"
 WHITE = "#E3C16F"

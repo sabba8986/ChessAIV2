@@ -1,17 +1,21 @@
+from PySide6.QtGui import QIcon
+
 PIECES = [[
-    "../assets/icons/pieces/black_pawn.svg",
-    "../assets/icons/pieces/black_rook.svg",
-    "../assets/icons/pieces/black_knight.svg",
-    "../assets/icons/pieces/black_bishop.svg",
-    "../assets/icons/pieces/black_queen.svg",
-    "../assets/icons/pieces/black_king.svg"
+    QIcon(),
+    QIcon("../assets/icons/pieces/black_pawn.svg"),
+    QIcon("../assets/icons/pieces/black_rook.svg"),
+    QIcon("../assets/icons/pieces/black_knight.svg"),
+    QIcon("../assets/icons/pieces/black_bishop.svg"),
+    QIcon("../assets/icons/pieces/black_queen.svg"),
+    QIcon("../assets/icons/pieces/black_king.svg")
     ], [
-    "../assets/icons/pieces/white_pawn.svg",
-    "../assets/icons/pieces/white_rook.svg",
-    "../assets/icons/pieces/white_knight.svg",
-    "../assets/icons/pieces/white_bishop.svg",
-    "../assets/icons/pieces/white_queen.svg",
-    "../assets/icons/pieces/white_king.svg"
+    QIcon(),
+    QIcon("../assets/icons/pieces/white_pawn.svg"),
+    QIcon("../assets/icons/pieces/white_rook.svg"),
+    QIcon("../assets/icons/pieces/white_knight.svg"),
+    QIcon("../assets/icons/pieces/white_bishop.svg"),
+    QIcon("../assets/icons/pieces/white_queen.svg"),
+    QIcon("../assets/icons/pieces/white_king.svg")
 ]]
 
 BROWN = "#B88B4A"

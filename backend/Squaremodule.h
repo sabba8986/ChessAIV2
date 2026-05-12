@@ -39,8 +39,8 @@ static int Square_init(PyObject* o, PyObject *args, PyObject *kwds){
 
 
 static PyMemberDef Square_members[] = {
-    {"type", Py_T_INT, offsetof(SquareObject, type), 0, "Type of the chess piece on this square, represented as an integer. -1 is empty (no piece), 0 is pawn, 1 is rook, 2 is knight, 3 is bishop, 4 is queen, 5 is king"}, 
-    {"is_white", Py_T_BOOL, offsetof(SquareObject, is_white), 0, "Whether the piece on this square is white. Not relevant when type is -1." }, 
+    {"type", Py_T_INT, offsetof(SquareObject, type), 0, "Type of the chess piece on this square, represented as an integer. 0 is empty (no piece), 1 is pawn, 2 is rook, 3 is knight, 4 is bishop, 5 is queen, 6 is king"}, 
+    {"is_white", Py_T_BOOL, offsetof(SquareObject, is_white), 0, "Whether the piece on this square is white. Not relevant when type is 0." }, 
     {NULL}
 };
 

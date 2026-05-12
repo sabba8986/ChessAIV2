@@ -49,10 +49,7 @@ class Window(QtWidgets.QWidget):
             for j in range(7, -1, -1):
                 piece = boardState[index]
                 tile = self.tileLayout.itemAtPosition(i, j).widget()
-                if(piece.type == -1):
-                    tile.setIcon(QtGui.QIcon())
-                else:
-                    tile.setIcon(PIECES[1 if piece.is_white else 0][piece.type])  
+                tile.setIcon(PIECES[1 if piece.is_white else 0][piece.type])  
                 index += 1
      
 

@@ -21,6 +21,23 @@ namespace defaults{
         std::transform(white_init.begin(), white_init.end(), init.begin(), [](const auto& board){return std::byteswap(board);});
         return init;
     }();
+
+    constexpr std::array<Piece, 64> pieces_init = [](){ 
+        std::array<Piece, 64> pieces{};
+        int i = 0;
+        for(std::uint64_t pos = 1; pos; pos <<= 1, i++){
+            for(int j = 0; j < 6; j++){
+                if(pos & white_init[j]){
+                    pieces[i].type = static_cast<PieceType>(j + 1);
+                    pieces[i].is_white = true;
+                }
+                else if(pos & black_init[j]){
+                    pieces[i].type = static_cast<PieceType>(j + 1);
+                }
+            }
+        }
+        return pieces;
+    }();
 }
 
 

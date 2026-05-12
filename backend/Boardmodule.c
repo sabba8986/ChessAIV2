@@ -37,7 +37,7 @@ static PyObject *py_get_board_state(PyObject *self, PyObject *args){
     for(int i = 0; i < 64; i++){
         int type = type_of_piece(i);
         int is_white = is_white_piece(i) ? 1 : 0;
-        PyObject *p = PyObject_CallFunction((PyObject*)&squareType, "ip", type, is_white);
+        PyObject *p = PyObject_CallFunction((PyObject*)&squareType, "ii", type, is_white);
         if(p == NULL){
             return NULL;
         }

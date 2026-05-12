@@ -43,12 +43,12 @@ class Window(QtWidgets.QWidget):
         self.renderBoardPieces(board.get_board_state())
 
 
-    def renderBoardPieces(self, boardState: str): 
+    def renderBoardPieces(self, boardState): 
         index = 0
         for i in range(7, -1, -1):
             for j in range(7, -1, -1):
                 piece = boardState[index]
-                tile = self.tileLayout.itemAtPosition(i, j).widget()
+                tile = self.tileLayout.itemAtPosition(i, j).widget() 
                 tile.setIcon(PIECES[1 if piece.is_white else 0][piece.type])  
                 index += 1
      

@@ -2,7 +2,7 @@
 #define DEFINES 
 #include<array>
 #include<cstdint>
-#include "moves.hpp"
+#include "bitboard.hpp"
 #include "Piece.hpp"
 #include <algorithm>
 #include <bit>
@@ -41,7 +41,7 @@ namespace defaults{
 }
 
 
-namespace magic{
+namespace tables{
     constexpr std::array<MagicInfo, 64> rook_magics = {
         {{9115426935197958144u, 5764611923777880706u, 52, 0}, {4485655873561051136u, 36046394582632964u, 53, 4096}, 
             {6782456361169985536u, 1729945211226296322u, 53, 6144}, {7930856604974452736u, 4612249295335723074u, 53, 8192}, 
@@ -124,7 +124,7 @@ namespace magic{
     
     template<PieceType p>
     constexpr std::size_t attack_table_size(){
-        static_assert(p == PieceType::ROOK | p == PieceType::BISHOP | p == PieceType::KNIGHT);
+        static_assert(p == PieceType::ROOK | p == PieceType::BISHOP | p == PieceType::KNIGHT | p == PieceType::KING);
         if constexpr(p == PieceType::ROOK){
             return 102400;
         }
@@ -136,32 +136,32 @@ namespace magic{
         }
     }
 
-    constexpr std::uint32_t get_index(std::uint64_t bitboard, const MagicInfo& magic_info){
+    constexpr std::uint32_t get_index_from_magic(std::uint64_t bitboard, const MagicInfo& magic_info){
         return magic_info.offset + ((bitboard * magic_info.magic) >> magic_info.shift);
     }
 
     template<PieceType p> 
     constexpr std::array<std::uint64_t, attack_table_size<p>()> populate_table(){
         std::array<std::uint64_t, attack_table_size<p>()> table{};
-        constexpr auto dirs = moves::get_directions<p>();
+        constexpr auto dirs = bitboard::get_directions<p>();
         constexpr auto dir1 = dirs[0], dir2 = dirs[1], dir3 = dirs[2], dir4 = dirs[3];
         int i = 0;
         for(std::uint64_t pos = 1; pos; pos <<= 1, i++){
             const MagicInfo& magic_info = (p == PieceType::ROOK) ? rook_magics[i] : bishop_magics[i]; 
-            for(std::uint64_t u = moves::internal_move<dir1>(pos); ; u = moves::internal_move<dir1>(u)){
-                for(std::uint64_t r = moves::internal_move<dir2>(pos); ; r = moves::internal_move<dir2>(r)){
-                    for(std::uint64_t d = moves::internal_move<dir3>(pos); ; d = moves::internal_move<dir3>(d)){
-                        for(std::uint64_t l = moves::internal_move<dir4>(pos); ; l = moves::internal_move<dir4>(l)){
+            for(std::uint64_t u = bitboard::internal_move<dir1>(pos); ; u = bitboard::internal_move<dir1>(u)){
+                for(std::uint64_t r = bitboard::internal_move<dir2>(pos); ; r = bitboard::internal_move<dir2>(r)){
+                    for(std::uint64_t d = bitboard::internal_move<dir3>(pos); ; d = bitboard::internal_move<dir3>(d)){
+                        for(std::uint64_t l = bitboard::internal_move<dir4>(pos); ; l = bitboard::internal_move<dir4>(l)){
                             std::uint64_t blockers = u | r | d | l;
                             std::uint64_t all_behind_pieces = 
-                                moves::internal_ray<dir1>(u) | 
-                                moves::internal_ray<dir2>(r) | 
-                                moves::internal_ray<dir3>(d) | 
-                                moves::internal_ray<dir4>(l);
-                            std::uint64_t attack = moves::get_attack<p>(pos, blockers);
+                                bitboard::internal_ray<dir1>(u) | 
+                                bitboard::internal_ray<dir2>(r) | 
+                                bitboard::internal_ray<dir3>(d) | 
+                                bitboard::internal_ray<dir4>(l);
+                            std::uint64_t attack = bitboard::get_attack<p>(pos, blockers);
                             for(std::uint64_t cur_behind = all_behind_pieces; ; cur_behind = (cur_behind - 1) & all_behind_pieces){
                                 std::uint64_t cur_board = cur_behind | blockers;
-                                table[get_index(cur_board, magic_info)] = attack;
+                                table[get_index_from_magic(cur_board, magic_info)] = attack;
                                 if(!cur_behind) break;
                             }
                             if(!l) break;
@@ -179,8 +179,8 @@ namespace magic{
     template<>
     constexpr std::array<std::uint64_t, attack_table_size<PieceType::KNIGHT>()> populate_table<PieceType::KNIGHT>(){
         std::array<std::uint64_t, 64> table;
-        constexpr std::array<moves::Direction, 8> shifts = 
-        {moves::K1, moves::K2, moves::K3, moves::K4, moves::K5, moves::K6, moves::K7, moves::K8};
+        constexpr std::array<bitboard::Direction, 8> shifts = 
+        {bitboard::K1, bitboard::K2, bitboard::K3, bitboard::K4, bitboard::K5, bitboard::K6, bitboard::K7, bitboard::K8};
         int i = 0;
         for(std::uint64_t pos = 1; pos; pos <<= 1, i++){
             std::uint64_t attack = 0;

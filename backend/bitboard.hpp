@@ -5,7 +5,7 @@
 #include "Piece.hpp"
 
 
-namespace moves{
+namespace bitboard{
     enum Direction{
         N = 8, 
         NE = 7, 
@@ -33,7 +33,7 @@ namespace moves{
     constexpr std::uint64_t left_edge{9259542123273814144u};
 
     template<Direction dir>
-    constexpr std::uint64_t edge(){
+    constexpr std::uint64_t boundary(){
         if constexpr(dir == N){
             return up_edge;
         }
@@ -63,10 +63,10 @@ namespace moves{
     template<Direction dir>
     constexpr std::uint64_t shift(std::uint64_t pos){
         if constexpr(dir < 0){
-            return pos & edge<dir>() ? 0 : pos >> (-1 * dir);
+            return pos & boundary<dir>() ? 0 : pos >> (-1 * dir);
         }
         else{
-            return pos & edge<dir>() ? 0 : pos << dir;
+            return pos & boundary<dir>() ? 0 : pos << dir;
         }
     }
 
@@ -79,12 +79,12 @@ namespace moves{
 
     template<Direction dir>
     constexpr std::uint64_t internal_move(std::uint64_t pos){
-        return shift<dir>(pos) & ~edge<dir>();
+        return shift<dir>(pos) & ~boundary<dir>();
     }
 
     template<Direction dir>
     constexpr std::uint64_t internal_ray(std::uint64_t pos){
-        return ray<dir>(pos) & ~edge<dir>();
+        return ray<dir>(pos) & ~boundary<dir>();
     }
 
     

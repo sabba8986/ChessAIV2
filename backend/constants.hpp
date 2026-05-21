@@ -143,7 +143,7 @@ namespace tables{
                                 bitboard::internal_ray(r, dir2) | 
                                 bitboard::internal_ray(d, dir3) | 
                                 bitboard::internal_ray(l, dir4);
-                            std::uint64_t attack = bitboard::get_attack(pos, p, blockers);
+                            std::uint64_t attack = bitboard::raycast_attack(pos, p, blockers);
                             for(std::uint64_t cur_behind = all_behind_pieces; ; cur_behind = (cur_behind - 1) & all_behind_pieces){
                                 std::uint64_t cur_board = cur_behind | blockers;
                                 table[get_index_from_magic(cur_board, magic_info)] = attack;

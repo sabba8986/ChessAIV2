@@ -82,13 +82,16 @@ namespace bitboard{
     }
 
 
-    constexpr std::uint64_t get_attack(std::uint64_t pos, PieceType p, std::uint64_t occupancy){
+    constexpr std::uint64_t raycast_attack(std::uint64_t pos, PieceType p, std::uint64_t occupancy){
         std::vector<Direction> dirs = get_directions(p);
         std::uint64_t attack = 0;
         for(Direction d: dirs){
-            for(std::uint64_t a = shift(pos, d); a && !(a & occupancy); a = shift(a, d)){
+            for(std::uint64_t a = shift(pos, d); ; a = shift(a, d)){
                 attack |= a;
-            }
+                if(!a || a & occupancy){
+                    break;
+                }
+            } 
         }
         return attack; 
     }

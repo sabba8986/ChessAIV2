@@ -202,3 +202,5 @@ namespace tables{
     constexpr std::array<std::uint64_t, table_size(PieceType::KNIGHT)> knight_attacks = populate_table<PieceType::KNIGHT>();
     constexpr std::array<std::uint64_t, table_size(PieceType::KING)> king_attacks = populate_table<PieceType::KING>();
 }
+
+#endif

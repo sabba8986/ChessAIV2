@@ -18,7 +18,8 @@ namespace defaults{
     constexpr std::array<std::uint64_t, 6> white_init = {255u << 8, 129, 66, 36, 16, 8};
     constexpr std::array<std::uint64_t, 6> black_init = [](){
         std::array<std::uint64_t, 6> init;
-        std::transform(white_init.begin(), white_init.end(), init.begin(), [](const auto& board){return std::byteswap(board);});
+        std::transform(white_init.begin(), white_init.end(), init.begin(), 
+                        [](const auto& board){return std::byteswap(board);});
         return init;
     }();
 
@@ -109,30 +110,14 @@ namespace tables{
             {8657588224u, 1199704893292800u, 59, 5024}, {38021120u, 577604691075268608u, 59, 5056}, 
             {1075975168u, 583251903589130280u, 59, 5088}, {275415828992u, 13983698835519709700u, 59, 5120}, 
             {70506452091904u, 565166224474624u, 59, 5152}, {18049651735527936u, 234189431337255952u, 58, 5184}}
-    };
-    constexpr std::array<std::uint64_t, 8> knight_direction_valid = {
-        18229723555195321344u,
-        71209857637481724u,
-        280371153272574u, 
-        140185576636287u,
-        17802464409370431u,
-        4557430888798830336u,
-        9187201950435704832u, 
-        18374403900871409664u
-    };
-
+    }; 
     
-    template<PieceType p>
-    constexpr std::size_t attack_table_size(){
-        static_assert(p == PieceType::ROOK | p == PieceType::BISHOP | p == PieceType::KNIGHT | p == PieceType::KING);
-        if constexpr(p == PieceType::ROOK){
-            return 102400;
-        }
-        else if constexpr(p == PieceType::BISHOP){
-            return 5248;
-        } 
-        else{
-            return 64;
+
+    constexpr std::size_t table_size(PieceType p){
+        switch(p){
+            case PieceType::ROOK: return 102400;
+            case PieceType::BISHOP: return 5248;
+            default: return 64;
         }
     }
 
@@ -141,24 +126,24 @@ namespace tables{
     }
 
     template<PieceType p> 
-    constexpr std::array<std::uint64_t, attack_table_size<p>()> populate_table(){
-        std::array<std::uint64_t, attack_table_size<p>()> table{};
-        constexpr auto dirs = bitboard::get_directions<p>();
-        constexpr auto dir1 = dirs[0], dir2 = dirs[1], dir3 = dirs[2], dir4 = dirs[3];
+    constexpr std::array<std::uint64_t, table_size(p)> populate_table(){
+        std::array<std::uint64_t, table_size(p)> table{};
+        auto dirs = bitboard::get_directions(p);
+        auto dir1 = dirs[0], dir2 = dirs[1], dir3 = dirs[2], dir4 = dirs[3];
         int i = 0;
         for(std::uint64_t pos = 1; pos; pos <<= 1, i++){
             const MagicInfo& magic_info = (p == PieceType::ROOK) ? rook_magics[i] : bishop_magics[i]; 
-            for(std::uint64_t u = bitboard::internal_move<dir1>(pos); ; u = bitboard::internal_move<dir1>(u)){
-                for(std::uint64_t r = bitboard::internal_move<dir2>(pos); ; r = bitboard::internal_move<dir2>(r)){
-                    for(std::uint64_t d = bitboard::internal_move<dir3>(pos); ; d = bitboard::internal_move<dir3>(d)){
-                        for(std::uint64_t l = bitboard::internal_move<dir4>(pos); ; l = bitboard::internal_move<dir4>(l)){
+            for(std::uint64_t u = bitboard::internal_move(pos, dir1); ; u = bitboard::internal_move(u, dir1)){
+                for(std::uint64_t r = bitboard::internal_move(pos, dir2); ; r = bitboard::internal_move(r, dir2)){
+                    for(std::uint64_t d = bitboard::internal_move(pos, dir3); ; d = bitboard::internal_move(d, dir3)){
+                        for(std::uint64_t l = bitboard::internal_move(pos, dir4); ; l = bitboard::internal_move(l, dir4)){
                             std::uint64_t blockers = u | r | d | l;
                             std::uint64_t all_behind_pieces = 
-                                bitboard::internal_ray<dir1>(u) | 
-                                bitboard::internal_ray<dir2>(r) | 
-                                bitboard::internal_ray<dir3>(d) | 
-                                bitboard::internal_ray<dir4>(l);
-                            std::uint64_t attack = bitboard::get_attack<p>(pos, blockers);
+                                bitboard::internal_ray(u, dir1) | 
+                                bitboard::internal_ray(r, dir2) | 
+                                bitboard::internal_ray(d, dir3) | 
+                                bitboard::internal_ray(l, dir4);
+                            std::uint64_t attack = bitboard::get_attack(pos, p, blockers);
                             for(std::uint64_t cur_behind = all_behind_pieces; ; cur_behind = (cur_behind - 1) & all_behind_pieces){
                                 std::uint64_t cur_board = cur_behind | blockers;
                                 table[get_index_from_magic(cur_board, magic_info)] = attack;
@@ -177,82 +162,43 @@ namespace tables{
     }
 
     template<>
-    constexpr std::array<std::uint64_t, attack_table_size<PieceType::KNIGHT>()> populate_table<PieceType::KNIGHT>(){
-        std::array<std::uint64_t, 64> table;
-        constexpr std::array<bitboard::Direction, 8> shifts = 
-        {bitboard::K1, bitboard::K2, bitboard::K3, bitboard::K4, bitboard::K5, bitboard::K6, bitboard::K7, bitboard::K8};
+    constexpr std::array<std::uint64_t, table_size(PieceType::KNIGHT)> populate_table<PieceType::KNIGHT>(){
+        constexpr std::array<std::uint64_t, 8> direction_valid = {
+            18229723555195321344u,
+            71209857637481724u,
+            280371153272574u, 
+            140185576636287u,
+            17802464409370431u,
+            4557430888798830336u,
+            9187201950435704832u, 
+            18374403900871409664u
+        };
+        std::array<std::uint64_t, 64> table{};
+        auto dirs = bitboard::get_directions(PieceType::KNIGHT); 
         int i = 0;
         for(std::uint64_t pos = 1; pos; pos <<= 1, i++){
-            std::uint64_t attack = 0;
             for(int j = 0; j < 8; j++){
-                if(pos & knight_direction_valid[j]) attack |= shifts[j];
+                if(pos & direction_valid[j]) table[i] |= bitboard::shift(pos, dirs[j]);
             }
-            table[i] = attack;
         }
         return table;
     }
 
-    constexpr std::array<std::uint64_t, attack_table_size<PieceType::ROOK>()> rook_attacks = populate_table<PieceType::ROOK>();
-    constexpr std::array<std::uint64_t, attack_table_size<PieceType::BISHOP>()> bishop_attacks = populate_table<PieceType::BISHOP>();
-    constexpr std::array<std::uint64_t, attack_table_size<PieceType::KNIGHT>()> knight_attacks = populate_table<PieceType::KNIGHT>();
+    template<>
+    constexpr std::array<std::uint64_t, table_size(PieceType::KING)> populate_table<PieceType::KING>(){
+        std::array<std::uint64_t, 64> table{};
+        auto dirs = bitboard::get_directions(PieceType::KING);
+        int i = 0;
+        for(std::uint64_t pos = 1; pos; pos <<= 1, i++){ 
+            for(int j = 0; j < 8; j++){
+                table[i] |= bitboard::shift(pos, dirs[j]);
+            }
+        }
+        return table;
+    }
+
+    constexpr std::array<std::uint64_t, table_size(PieceType::ROOK)> rook_attacks = populate_table<PieceType::ROOK>();
+    constexpr std::array<std::uint64_t, table_size(PieceType::BISHOP)> bishop_attacks = populate_table<PieceType::BISHOP>();
+    constexpr std::array<std::uint64_t, table_size(PieceType::KNIGHT)> knight_attacks = populate_table<PieceType::KNIGHT>();
+    constexpr std::array<std::uint64_t, table_size(PieceType::KING)> king_attacks = populate_table<PieceType::KING>();
 }
-
-//Indices for each piece in white/black attributes in the Board class
-#define PAWN_INDEX 0
-#define ROOK_INDEX 1
-#define KNIGHT_INDEX 2  
-#define BISHOP_INDEX 3
-#define QUEEN_INDEX 4  
-#define KING_INDEX 5  
-
-//Bitmasks for whether the given knight move can be made from each position
-#define KNIGHT_1_VALID 18229723555195321344ULL //2 right, 1 down
-#define KNIGHT_2_VALID 71209857637481724ULL //2 right, 1 up
-#define KNIGHT_3_VALID 280371153272574ULL //2 up, 1 right
-#define KNIGHT_4_VALID 140185576636287ULL //2 up, 1 left
-#define KNIGHT_5_VALID 17802464409370431ULL //2 left, 1 up
-#define KNIGHT_6_VALID 4557430888798830336ULL //2 left, 1 down
-#define KNIGHT_7_VALID 9187201950435704832ULL //2 down, 1 left
-#define KNIGHT_8_VALID 18374403900871409664ULL //2 down, 1 right
-  
-
-
-//Sets the initial positions for each piece type
-#define INIT_BLACK_ROOKS 9295429630892703744ULL
-#define INIT_BLACK_KNIGHTS 4755801206503243776ULL
-#define INIT_BLACK_BISHOPS 2594073385365405696ULL
-#define INIT_BLACK_QUEEN 1152921504606846976ULL
-#define INIT_BLACK_KING 576460752303423488ULL
-#define INIT_BLACK_PAWNS 71776119061217280ULL
-#define INIT_WHITE_PAWNS 65280
-#define INIT_WHITE_KING 8
-#define INIT_WHITE_QUEEN 16
-#define INIT_WHITE_BISHOPS 36
-#define INIT_WHITE_KNIGHTS 66
-#define INIT_WHITE_ROOKS 129
-
-//Top left position of the bitboard (only most significant bit toggled on)
-#define BITBOARD_TOP_LEFT 9223372036854775808ULL
-
-//Bitmasks for multiple positions on the board
-#define EDGE_OF_BOARD 36822278289781621759ULL //right, left, top, bottom edges bitwised ORed
-#define BITBOARD_RIGHT_EDGE 72340172838076673ULL
-#define BITBOARD_LEFT_EDGE 9259542123273814144ULL
-#define BITBOARD_TOP_EDGE 18374686479671623680ULL
-#define BITBOARD_BOTTOM_EDGE 255
-
-
-
-#define WHITE_PAWN_ROW 65280
-#define BLACK_PAWN_ROW 71776119061217280ULL
-
-//Codes for method returns
-#define EMPTY_TILE -1
-#define INVALID_TILE 6
-#define NO_THREAT_DIR 8
-
-#define TURN 1 
-#define CHECK 2  
-#define CHECKMATE 4
-
-#endif

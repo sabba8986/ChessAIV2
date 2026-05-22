@@ -39,6 +39,22 @@ namespace defaults{
         }
         return pieces;
     }();
+
+    constexpr std::uint64_t all_white_init = [](){
+        std::uint64_t pieces = 0;
+        for(auto occ: white_init){
+            pieces |= occ;
+        }
+        return pieces;
+    }();
+
+    constexpr std::uint64_t all_black_init = [](){
+        std::uint64_t pieces = 0;
+        for(auto occ: black_init){
+            pieces |= occ;
+        }
+        return pieces;
+    }();
 }
 
 

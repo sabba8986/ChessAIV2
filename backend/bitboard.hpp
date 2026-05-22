@@ -1,5 +1,5 @@
-#ifndef MOVES
-#define MOVES
+#ifndef BITBOARD
+#define BITBOARD
 #include <cstdint>
 #include <vector>
 #include "Piece.hpp"

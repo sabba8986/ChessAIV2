@@ -1,5 +1,7 @@
 #include "interface.hpp"
 #include "Board.hpp"
+#include <cstdint>
+
 
 Board *current_board = nullptr;
 
@@ -14,4 +16,9 @@ int type_of_piece(int i){
 
 bool is_white_piece(int i){
     return (current_board->layout())[i].is_white;
+}
+
+std::uint64_t get_attack(int sq){
+    std::uint64_t c = current_board->get_attack(sq);
+    return c;
 }

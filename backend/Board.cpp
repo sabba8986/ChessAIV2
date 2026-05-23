@@ -1,5 +1,5 @@
 #include "Board.hpp"
-
+#include <iostream>
 Board::Board(){
     white = defaults::white_init;
     black = defaults::black_init;
@@ -14,7 +14,7 @@ const std::array<Piece, 64>& Board::layout() const{
 
 const std::uint64_t Board::get_attack(int sq) const{
     const Piece& piece = pieces[sq];
-    if(pieces[sq].is_white){
+    if(piece.is_white){
         return get_attack<true>(piece.type, sq);
     }
     return get_attack<false>(piece.type, sq);

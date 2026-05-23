@@ -1,11 +1,11 @@
-#ifndef Board
+#ifndef BOARD
 #define BOARD
 
 #include "Piece.hpp"
-#include "constants.hpp"
 #include "attacks.hpp"
 #include <cstdint>
 #include <array>
+#include <iostream>
 
 class Board{
     //bitboards for each color. Pieces are in the order of: 
@@ -26,7 +26,7 @@ class Board{
             case PieceType::QUEEN: return attacks::bishop_attacks(sq, allies, enemies) | attacks::rook_attacks(sq, allies, enemies);
             case PieceType::KNIGHT: return attacks::knight_attacks(sq, allies, enemies);
             case PieceType::KING: return attacks::king_attacks(sq, allies, enemies);
-            case PieceType::PAWN: return attacks::pawn_attacks<is_white>(allies, enemies);
+            case PieceType::PAWN: return attacks::pawn_attacks<is_white>(sq, allies, enemies);
             default: return 0;
         }
     }

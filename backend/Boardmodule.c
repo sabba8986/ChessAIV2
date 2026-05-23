@@ -1,12 +1,12 @@
 #define PY_SSIZE_T_CLEAN
 #include <python3.14/Python.h>
-
+#include <stdint.h>
 const char *reps = "_prnbqk";
 
 extern void create_board();
 extern int type_of_piece(int i);
 extern bool is_white_piece(int i);
-
+extern uint64_t get_attack(int sq); 
 
 static PyObject *BoardError = NULL;
 
@@ -34,7 +34,7 @@ static PyObject *py_get_icon_indices(PyObject *self, PyObject *args){
     if(board == NULL){
         return NULL;
     }
-    for(int i = 63; i > -1; i--){
+    for(int i = 0; i < 64; i++){
         char piece = reps[type_of_piece(i)];
         if(piece != '_' && is_white_piece(i)){
             piece -= 32; //converts to uppercase
@@ -44,10 +44,31 @@ static PyObject *py_get_icon_indices(PyObject *self, PyObject *args){
     return board;
 }
 
+static PyObject *py_get_attack(PyObject *self, PyObject *args){
+    PyObject *list = PyList_New(0);
+    int p;
+    if(!PyArg_ParseTuple(args, "i", &p)){
+        return NULL;
+    }
+    uint64_t attacks = get_attack(p); 
+    while(attacks){
+        int sq = __builtin_ctzll(attacks);
+        PyObject *num = PyLong_FromLong(sq);
+        if(num == NULL){
+            return NULL;
+        }
+        if(PyList_Append(list, num)){
+            return NULL;
+        }
+        attacks &= ~(1ull << sq);
+    }
+    return list;
+}
 
 static PyMethodDef board_funcs[] = {
     {"create_board", py_create_board, METH_VARARGS, "Resets the main board game by creating a new board." }, 
-    {"get_board_state", py_get_icon_indices, METH_VARARGS, "Returns a string representation of the board, left to right, top to bottom."}, 
+    {"get_board_state", py_get_icon_indices, METH_VARARGS, "Returns a string representation of the board, right to left, bottom to top."},
+    {"get_attack", py_get_attack, METH_VARARGS, "Returns a list of all possible attacks from the given square."},
     {NULL, NULL, 0, NULL}
 };
 

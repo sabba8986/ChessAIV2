@@ -2,6 +2,7 @@
 #define BITBOARD
 #include <cstdint>
 #include <vector>
+#include <string>
 #include "Piece.hpp"
 
 
@@ -42,28 +43,28 @@ namespace bitboard{
             case S: return down_edge;
             case SW: return down_edge | left_edge;
             case W: return left_edge;
-            default: return left_edge | up_edge;
+            case NW: return left_edge | up_edge;
+            default: return 0;
         }
     }
 
-    constexpr std::uint64_t shift(std::uint64_t pos, Direction dir){
-        if(dir < 0){
-            return pos & boundary(dir) ? 0 : pos >> (-1 * dir);
-        }
-        else{
-            return pos & boundary(dir) ? 0 : pos << dir;
-        }
+    constexpr std::uint64_t shift(std::uint64_t pos, int shift){
+        return shift < 0 ? pos >> (-1 * shift) : pos << shift;
+    }
+
+    constexpr std::uint64_t slide(std::uint64_t pos, Direction dir){
+            return pos & boundary(dir) ? 0 : shift(pos, dir);
     }
 
     constexpr std::uint64_t ray(std::uint64_t pos, Direction dir){
         std::uint64_t moves = 0;
-        while((pos = shift(pos, dir))) moves |= pos;
+        while((pos = slide(pos, dir))) moves |= pos;
         return moves; 
     }
 
 
-    constexpr std::uint64_t internal_move(std::uint64_t pos, Direction dir){
-        return shift(pos, dir) & ~boundary(dir);
+    constexpr std::uint64_t internal_slide(std::uint64_t pos, Direction dir){
+        return slide(pos, dir) & ~boundary(dir);
     }
 
     constexpr std::uint64_t internal_ray(std::uint64_t pos, Direction dir){
@@ -86,7 +87,7 @@ namespace bitboard{
         std::vector<Direction> dirs = get_directions(p);
         std::uint64_t attack = 0;
         for(Direction d: dirs){
-            for(std::uint64_t a = shift(pos, d); ; a = shift(a, d)){
+            for(std::uint64_t a = slide(pos, d); ; a = slide(a, d)){
                 attack |= a;
                 if(!a || a & occupancy){
                     break;
@@ -95,6 +96,20 @@ namespace bitboard{
         }
         return attack; 
     }
+
+    inline std::string to_string(const std::uint64_t bitboard){
+        std::string result;
+        result.reserve(78);
+        std::uint64_t trav = (1ull << 63);
+        for(int i = 0; i < 8; i++){
+            for(int j = 0; j < 8; j++, trav >>= 1){
+                result += trav & bitboard ? "1" : "0";
+            }
+            result += "\n";
+        }
+        return result;
+    }
+
 };
 
 #endif

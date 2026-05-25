@@ -5,7 +5,6 @@
 #include "attacks.hpp"
 #include <cstdint>
 #include <array>
-#include <iostream>
 
 class Board{
     //bitboards for each color. Pieces are in the order of: 
@@ -18,8 +17,15 @@ class Board{
 
     template<bool is_white>
     const std::uint64_t get_attack(PieceType p, int sq) const{
-        std::uint64_t allies = is_white ? all_white : all_black;
-        std::uint64_t enemies = is_white ? all_black : all_white;
+        std::uint64_t allies, enemies;
+        if constexpr(is_white){
+            allies = all_white;
+            enemies = all_black;
+        }
+        else{
+            allies = all_black;
+            enemies = all_white;
+        }
         switch(p){
             case PieceType::ROOK: return attacks::rook_attacks(sq, allies, enemies);
             case PieceType::BISHOP: return attacks::bishop_attacks(sq, allies, enemies);
@@ -29,13 +35,18 @@ class Board{
             case PieceType::PAWN: return attacks::pawn_attacks<is_white>(sq, allies, enemies);
             default: return 0;
         }
-    }
+    } 
 
 public:
     Board();
     const std::array<Piece, 64>& layout() const;
 
     const std::uint64_t get_attack(int sq) const;
+
+    void make_move(int s, int d);
+
+    void reset();
+
 };
 
 

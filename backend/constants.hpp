@@ -27,14 +27,20 @@ namespace defaults{
         std::array<Piece, 64> pieces{};
         int i = 0;
         for(std::uint64_t pos = 1; pos; pos <<= 1, i++){
+            bool matched = false;
             for(int j = 0; j < 6; j++){
                 if(pos & white_init[j]){
-                    pieces[i].type = static_cast<PieceType>(j + 1);
+                    matched = true;
+                    pieces[i].type = static_cast<PieceType>(j);
                     pieces[i].is_white = true;
                 }
                 else if(pos & black_init[j]){
-                    pieces[i].type = static_cast<PieceType>(j + 1);
+                    matched = true;
+                    pieces[i].type = static_cast<PieceType>(j);
                 }
+            }
+            if(!matched){
+                pieces[i].type = PieceType::EMPTY;
             }
         }
         return pieces;

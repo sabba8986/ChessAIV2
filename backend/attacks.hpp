@@ -11,14 +11,14 @@ namespace attacks{
         std::uint64_t occupancy = allies | enemies;
         if constexpr(is_white){
             std::uint64_t attack = bitboard::slide(pos, bitboard::N) & ~occupancy;
-            if(attack && (pos & defaults::white_init[0])){
+            if(attack && (pos & defaults::white_init[static_cast<int>(PieceType::PAWN)])){
                 attack |= bitboard::slide(attack, bitboard::N) & ~occupancy;
             }
             return attack | ((bitboard::slide(pos, bitboard::NE) | bitboard::slide(pos, bitboard::NW)) & enemies);
         }
         else{
             std::uint64_t attack = bitboard::slide(pos, bitboard::S) & ~occupancy;
-            if(attack && (pos & defaults::black_init[0])){
+            if(attack && (pos & defaults::black_init[static_cast<int>(PieceType::PAWN)])){
                 attack |= bitboard::slide(attack, bitboard::S) & ~occupancy;
             }
             return attack | ((bitboard::slide(pos, bitboard::SE) | bitboard::slide(pos, bitboard::SW)) & enemies);

@@ -1,12 +1,13 @@
 #define PY_SSIZE_T_CLEAN
 #include <python3.14/Python.h>
 #include <stdint.h>
-const char *reps = "_prnbqk";
+const char *reps = "prnbqk_";
 
 extern void create_board();
 extern int type_of_piece(int i);
 extern bool is_white_piece(int i);
 extern uint64_t get_attack(int sq); 
+extern void make_move(int s, int d);
 
 static PyObject *BoardError = NULL;
 
@@ -65,10 +66,20 @@ static PyObject *py_get_attack(PyObject *self, PyObject *args){
     return list;
 }
 
+static PyObject *py_make_move(PyObject *self, PyObject *args){
+    int s, d;
+    if(!PyArg_ParseTuple(args, "ii", &s, &d)){
+        return NULL;
+    }
+    make_move(s, d);
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef board_funcs[] = {
     {"create_board", py_create_board, METH_VARARGS, "Resets the main board game by creating a new board." }, 
     {"get_board_state", py_get_icon_indices, METH_VARARGS, "Returns a string representation of the board, right to left, bottom to top."},
     {"get_attack", py_get_attack, METH_VARARGS, "Returns a list of all possible attacks from the given square."},
+    {"make_move", py_make_move, METH_VARARGS, "Perform a valid move on the board."},
     {NULL, NULL, 0, NULL}
 };
 

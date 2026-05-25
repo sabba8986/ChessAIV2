@@ -2,13 +2,13 @@
 #define PIECE
 
 enum class PieceType: int{
-    EMPTY = 0,
-    PAWN = 1, 
-    ROOK = 2, 
-    KNIGHT = 3, 
-    BISHOP = 4, 
-    QUEEN = 5, 
-    KING = 6
+    PAWN = 0, 
+    ROOK = 1, 
+    KNIGHT = 2, 
+    BISHOP = 3, 
+    QUEEN = 4, 
+    KING = 5, 
+    EMPTY = 6
 };
 
 struct Piece{

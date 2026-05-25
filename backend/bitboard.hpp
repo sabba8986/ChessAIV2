@@ -28,32 +28,66 @@ namespace bitboard{
 
 
 
-    constexpr std::uint64_t up_edge{18374686479671623680u};
+    constexpr std::uint64_t up_edge{18374686479671623680ull};
     constexpr std::uint64_t down_edge{255};
-    constexpr std::uint64_t right_edge{72340172838076673}; 
-    constexpr std::uint64_t left_edge{9259542123273814144u};
+    constexpr std::uint64_t right_edge{72340172838076673ull}; 
+    constexpr std::uint64_t left_edge{9259542123273814144ull};
+
+
+    template<Direction dir>
+    constexpr std::uint64_t boundary(){
+        if constexpr(dir == N) return up_edge;
+        else if constexpr(dir == NE) return up_edge | right_edge;
+        else if constexpr(dir == E) return right_edge;
+        else if constexpr(dir == SE) return down_edge | right_edge;
+        else if constexpr(dir == S) return down_edge;
+        else if constexpr(dir == SW) return down_edge | left_edge;
+        else if constexpr(dir == W) return left_edge;
+        else if constexpr(dir == NW) return left_edge | up_edge;
+        else return 0;
+    }
 
 
     constexpr std::uint64_t boundary(Direction dir){
         switch(dir){
-            case N: return up_edge;
-            case NE: return up_edge | right_edge;
-            case E: return right_edge;
-            case SE: return down_edge | right_edge;
-            case S: return down_edge;
-            case SW: return down_edge | left_edge;
-            case W: return left_edge;
-            case NW: return left_edge | up_edge;
+            case N: return boundary<N>();
+            case NE: return boundary<NE>();
+            case E: return boundary<E>();
+            case SE: return boundary<SE>();
+            case S: return boundary<S>();
+            case SW: return boundary<SW>();
+            case W: return boundary<W>();
+            case NW: return boundary<NW>();
             default: return 0;
         }
     }
 
-    constexpr std::uint64_t shift(std::uint64_t pos, int shift){
-        return shift < 0 ? pos >> (-1 * shift) : pos << shift;
+    template<int shft>
+    constexpr std::uint64_t shift(std::uint64_t pos){
+        if constexpr(shft < 0) return pos >> (-1 * shft);
+        else return pos << shft;
+    }
+
+    constexpr std::uint64_t shift(std::uint64_t pos, int shft){
+        return shft < 0 ? pos >> (-1 * shft) : pos << shft;
+    }
+
+    template<Direction dir>
+    constexpr std::uint64_t slide(std::uint64_t pos){
+        if constexpr(dir == N || dir == S) return shift<dir>(pos);
+        else return pos & boundary<dir>() ? 0 : shift<dir>(pos);
     }
 
     constexpr std::uint64_t slide(std::uint64_t pos, Direction dir){
-            return pos & boundary(dir) ? 0 : shift(pos, dir);
+        if(dir == N || dir == S) return shift(pos, dir);
+        else return pos & boundary(dir) ? 0 : shift(pos, dir);
+    }
+
+    template<Direction dir>
+    constexpr std::uint64_t ray(std::uint64_t pos){
+        std::uint64_t moves = 0;
+        while((pos = slide<dir>(pos))) moves |= pos;
+        return moves; 
     }
 
     constexpr std::uint64_t ray(std::uint64_t pos, Direction dir){
@@ -62,15 +96,23 @@ namespace bitboard{
         return moves; 
     }
 
+    template<Direction dir>
+    constexpr std::uint64_t internal_slide(std::uint64_t pos){
+        return slide<dir>(pos) & ~boundary<dir>();
+    }
 
     constexpr std::uint64_t internal_slide(std::uint64_t pos, Direction dir){
         return slide(pos, dir) & ~boundary(dir);
     }
 
+    template<Direction dir>
+    constexpr std::uint64_t internal_ray(std::uint64_t pos){
+        return ray<dir>(pos) & ~boundary<dir>();
+    }
+
     constexpr std::uint64_t internal_ray(std::uint64_t pos, Direction dir){
         return ray(pos, dir) & ~boundary(dir);
     }
-
 
     constexpr std::vector<Direction> get_directions(PieceType p){
         switch(p){

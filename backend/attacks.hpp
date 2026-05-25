@@ -2,7 +2,6 @@
 #define ATTACKS
 #include "constants.hpp"
 #include <cstdint>
-#include <iostream>
 
 namespace attacks{
     template<bool is_white>
@@ -10,18 +9,18 @@ namespace attacks{
         std::uint64_t pos = std::uint64_t{1} << sq;
         std::uint64_t occupancy = allies | enemies;
         if constexpr(is_white){
-            std::uint64_t attack = bitboard::slide(pos, bitboard::N) & ~occupancy;
+            std::uint64_t attack = bitboard::slide<bitboard::N>(pos) & ~occupancy;
             if(attack && (pos & defaults::white_init[static_cast<int>(PieceType::PAWN)])){
-                attack |= bitboard::slide(attack, bitboard::N) & ~occupancy;
+                attack |= bitboard::slide<bitboard::N>(attack) & ~occupancy;
             }
-            return attack | ((bitboard::slide(pos, bitboard::NE) | bitboard::slide(pos, bitboard::NW)) & enemies);
+            return attack | ((bitboard::slide<bitboard::NE>(pos) | bitboard::slide<bitboard::NW>(pos)) & enemies);
         }
         else{
-            std::uint64_t attack = bitboard::slide(pos, bitboard::S) & ~occupancy;
+            std::uint64_t attack = bitboard::slide<bitboard::S>(pos) & ~occupancy;
             if(attack && (pos & defaults::black_init[static_cast<int>(PieceType::PAWN)])){
-                attack |= bitboard::slide(attack, bitboard::S) & ~occupancy;
+                attack |= bitboard::slide<bitboard::S>(attack) & ~occupancy;
             }
-            return attack | ((bitboard::slide(pos, bitboard::SE) | bitboard::slide(pos, bitboard::SW)) & enemies);
+            return attack | ((bitboard::slide<bitboard::SE>(pos) | bitboard::slide<bitboard::SW>(pos)) & enemies);
 
         }
     }

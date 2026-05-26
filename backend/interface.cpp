@@ -19,10 +19,7 @@ bool is_white_piece(int i){
 }
 
 std::uint64_t get_attack(int sq){
-    //unsigned long long start = __rdtsc();
     std::uint64_t c = current_board.get_attack(sq);
-    //unsigned long long end = __rdtsc();
-    //std::cout << "Attacks generated in " << end - start << " cycles" << std::endl;
     return c;
 }
 

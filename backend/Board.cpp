@@ -24,14 +24,14 @@ void Board::make_move(int s, int d){
     if(src.is_white){
         white[static_cast<int>(src.type)] ^= move_mask;
         all_white ^= move_mask;
-        black[static_cast<int>(dest.type)] ^= dest_mask;
-        all_black ^= dest_mask;
+        black[static_cast<int>(dest.type)] &= ~dest_mask;
+        all_black &= ~dest_mask;
     }
     else{
         black[static_cast<int>(src.type)] ^= move_mask;
         all_black ^= move_mask;
-        white[static_cast<int>(dest.type)] ^= dest_mask;
-        all_white ^= dest_mask;
+        white[static_cast<int>(dest.type)] &= ~dest_mask;
+        all_white &= ~dest_mask;
     }
     dest = src;
     src.type = PieceType::EMPTY;

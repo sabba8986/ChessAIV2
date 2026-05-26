@@ -21,5 +21,7 @@ WHITE = "#E3C16F"
 
 
 TILE_STYLE = "background-color:{color}; border: black; border-width: thin"
-HIGHLIGHT_STYLE = "background-color:#FFFF00; border: 1px solid black"
+NON_CAPTURE_STYLE = "background-color:#FFFF00; border: 1px solid black"
+CAPTURE_STYLE = "background-color:#FF0000; border: 1px solid black"
+
 

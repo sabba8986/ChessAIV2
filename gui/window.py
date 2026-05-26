@@ -1,6 +1,6 @@
 from PySide6 import QtCore, QtWidgets, QtGui
 import board 
-from constants import ICONS, TILE_STYLE, HIGHLIGHT_STYLE, BROWN, WHITE 
+from constants import ICONS, TILE_STYLE, CAPTURE_STYLE, NON_CAPTURE_STYLE, BROWN, WHITE 
 
 def numToPos(sq):
     return ((63 - sq) // 8, (63 - sq) % 8)
@@ -25,12 +25,14 @@ class Tile(QtWidgets.QPushButton):
             self.window().renderBoardState()
         else:
             self.window().selectedSquare = self.tileNum
-            attacks = board.get_attack(self.tileNum)
             self.window().renderAttacks(self.tileNum)
     
-    def highlight(self):
+    def highlight(self, isCapture):
         self.highlighted = True
-        self.setStyleSheet(HIGHLIGHT_STYLE)
+        if isCapture:
+            self.setStyleSheet(CAPTURE_STYLE)
+        else:
+            self.setStyleSheet(NON_CAPTURE_STYLE)
 
 
     def reset(self):
@@ -84,13 +86,15 @@ class Window(QtWidgets.QWidget):
         for tile in self.highlighted:
             tile.reset()
         self.highlighted = []
-        attacks = board.get_attack(tileNum)
-        for sq in attacks:
-            i = (63 - sq) // 8
-            j = (63 - sq) % 8
-            tile = self.tileLayout.itemAtPosition(i, j).widget()
+        non_captures, captures = board.get_attack(tileNum)
+        for sq in non_captures:
+            tile = self.tileLayout.itemAtPosition(*numToPos(sq)).widget()
             self.highlighted.append(tile)
-            tile.highlight()
+            tile.highlight(isCapture = False)
+        for sq in captures:
+            tile = self.tileLayout.itemAtPosition(*numToPos(sq)).widget()
+            self.highlighted.append(tile)
+            tile.highlight(isCapture = True)
 
 
 

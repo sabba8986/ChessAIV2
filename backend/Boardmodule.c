@@ -32,9 +32,7 @@ static PyObject *py_create_board(PyObject *self, PyObject *args){
 
 static PyObject *py_get_icon_indices(PyObject *self, PyObject *args){
     PyObject *board = PyUnicode_New(64, 127); 
-    if(board == NULL){
-        return NULL;
-    }
+    if(board == NULL) return NULL;
     for(int i = 0; i < 64; i++){
         char piece = reps[type_of_piece(i)];
         if(piece != '_' && is_white_piece(i)){
@@ -46,24 +44,28 @@ static PyObject *py_get_icon_indices(PyObject *self, PyObject *args){
 }
 
 static PyObject *py_get_attack(PyObject *self, PyObject *args){
-    PyObject *list = PyList_New(0);
+    PyObject *non_captures = PyList_New(0);
+    PyObject *captures = PyList_New(0);
+    if(captures == NULL || non_captures == NULL) return NULL;
     int p;
-    if(!PyArg_ParseTuple(args, "i", &p)){
-        return NULL;
-    }
+    if(!PyArg_ParseTuple(args, "i", &p)) return NULL;
     uint64_t attacks = get_attack(p); 
+    bool opp_is_white = !is_white_piece(p);
     while(attacks){
         int sq = __builtin_ctzll(attacks);
         PyObject *num = PyLong_FromLong(sq);
-        if(num == NULL){
-            return NULL;
+        if(num == NULL) return NULL;
+        if(reps[type_of_piece(sq)] != '_' && (is_white_piece(sq) == opp_is_white)){
+            if(PyList_Append(captures, num)) return NULL;
         }
-        if(PyList_Append(list, num)){
-            return NULL;
+        else{
+            if(PyList_Append(non_captures, num)) return NULL;
         }
         attacks &= ~(1ull << sq);
     }
-    return list;
+    PyObject *result = PyTuple_Pack(2, non_captures, captures);
+    if(result == NULL) return NULL; 
+    return result;
 }
 
 static PyObject *py_make_move(PyObject *self, PyObject *args){
@@ -78,7 +80,7 @@ static PyObject *py_make_move(PyObject *self, PyObject *args){
 static PyMethodDef board_funcs[] = {
     {"create_board", py_create_board, METH_VARARGS, "Resets the main board game by creating a new board." }, 
     {"get_board_state", py_get_icon_indices, METH_VARARGS, "Returns a string representation of the board, right to left, bottom to top."},
-    {"get_attack", py_get_attack, METH_VARARGS, "Returns a list of all possible attacks from the given square."},
+    {"get_attack", py_get_attack, METH_VARARGS, "Returns all possible attacks from the given square, as a list of quiet moves and a list of capture moves."},
     {"make_move", py_make_move, METH_VARARGS, "Perform a valid move on the board."},
     {NULL, NULL, 0, NULL}
 };

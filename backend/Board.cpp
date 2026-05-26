@@ -19,24 +19,19 @@ const std::uint64_t Board::get_attack(int sq) const{
 void Board::make_move(int s, int d){
     Piece& src = pieces[s];
     Piece& dest = pieces[d];
-    if(src.type == PieceType::EMPTY) return;
     std::uint64_t dest_mask = 1ull << d;
     std::uint64_t move_mask = dest_mask | (1ull << s);
     if(src.is_white){
         white[static_cast<int>(src.type)] ^= move_mask;
         all_white ^= move_mask;
-        if(dest.type != PieceType::EMPTY){
-            black[static_cast<int>(dest.type)] ^= dest_mask;
-            all_black ^= dest_mask;
-        }
+        black[static_cast<int>(dest.type)] ^= dest_mask;
+        all_black ^= dest_mask;
     }
     else{
         black[static_cast<int>(src.type)] ^= move_mask;
         all_black ^= move_mask;
-        if(dest.type != PieceType::EMPTY){
-            white[static_cast<int>(dest.type)] ^= dest_mask;
-            all_white ^= dest_mask;
-        }
+        white[static_cast<int>(dest.type)] ^= dest_mask;
+        all_white ^= dest_mask;
     }
     dest = src;
     src.type = PieceType::EMPTY;

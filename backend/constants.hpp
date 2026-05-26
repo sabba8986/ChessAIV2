@@ -15,9 +15,9 @@ struct MagicInfo{
 };
 
 namespace defaults{
-    constexpr std::array<std::uint64_t, 6> white_init = {255ull << 8, 129, 66, 36, 16, 8};
-    constexpr std::array<std::uint64_t, 6> black_init = [](){
-        std::array<std::uint64_t, 6> init;
+    constexpr std::array<std::uint64_t, 7> white_init = {255ull << 8, 129, 66, 36, 16, 8, 0};
+    constexpr std::array<std::uint64_t, 7> black_init = [](){
+        std::array<std::uint64_t, 7> init;
         std::transform(white_init.begin(), white_init.end(), init.begin(), 
                         [](const auto& board){return std::byteswap(board);});
         return init;
@@ -150,23 +150,24 @@ namespace tables{
 
     template<PieceType p> 
     constexpr std::array<std::uint64_t, table_size(p)> populate_table(){
+        using namespace bitboard;
         std::array<std::uint64_t, table_size(p)> table{};
-        auto dirs = bitboard::get_directions(p);
+        auto dirs = get_directions(p);
         auto dir1 = dirs[0], dir2 = dirs[1], dir3 = dirs[2], dir4 = dirs[3];
         int i = 0;
         for(std::uint64_t pos = 1; pos; pos <<= 1, i++){
             const MagicInfo& magic_info = (p == PieceType::ROOK) ? rook_magics[i] : bishop_magics[i]; 
-            for(std::uint64_t u = bitboard::internal_slide(pos, dir1); ; u = bitboard::internal_slide(u, dir1)){
-                for(std::uint64_t r = bitboard::internal_slide(pos, dir2); ; r = bitboard::internal_slide(r, dir2)){
-                    for(std::uint64_t d = bitboard::internal_slide(pos, dir3); ; d = bitboard::internal_slide(d, dir3)){
-                        for(std::uint64_t l = bitboard::internal_slide(pos, dir4); ; l = bitboard::internal_slide(l, dir4)){
+            for(std::uint64_t u = internal_slide(pos, dir1); ; u = internal_slide(u, dir1)){
+                for(std::uint64_t r = internal_slide(pos, dir2); ; r = internal_slide(r, dir2)){
+                    for(std::uint64_t d = internal_slide(pos, dir3); ; d = internal_slide(d, dir3)){
+                        for(std::uint64_t l = internal_slide(pos, dir4); ; l = internal_slide(l, dir4)){
                             std::uint64_t blockers = u | r | d | l;
                             std::uint64_t all_behind_pieces = 
-                                bitboard::internal_ray(u, dir1) | 
-                                bitboard::internal_ray(r, dir2) | 
-                                bitboard::internal_ray(d, dir3) | 
-                                bitboard::internal_ray(l, dir4);
-                            std::uint64_t attack = bitboard::raycast_attack(pos, p, blockers);
+                                internal_ray(u, dir1) | 
+                                internal_ray(r, dir2) | 
+                                internal_ray(d, dir3) | 
+                                internal_ray(l, dir4);
+                            std::uint64_t attack = raycast_attack(pos, p, blockers);
                             for(std::uint64_t cur_behind = all_behind_pieces; ; cur_behind = (cur_behind - 1) & all_behind_pieces){
                                 std::uint64_t cur_board = cur_behind | blockers;
                                 table[get_index_from_magic(cur_board, magic_info)] = attack;
@@ -186,6 +187,7 @@ namespace tables{
 
     template<>
     constexpr std::array<std::uint64_t, table_size(PieceType::KNIGHT)> populate_table<PieceType::KNIGHT>(){
+        using namespace bitboard;
         std::array<std::uint64_t, 8> direction_valid = {
             18229723555195321344ull,
             71209857637481724ull,
@@ -201,7 +203,7 @@ namespace tables{
         int i = 0;
         for(std::uint64_t pos = 1; pos; pos <<= 1, i++){
             for(int j = 0; j < 8; j++){
-                if(pos & direction_valid[j]) table[i] |= bitboard::shift(pos, dirs[j]);
+                if(pos & direction_valid[j]) table[i] |= shift(pos, dirs[j]);
             }
         }
         return table;
@@ -209,12 +211,13 @@ namespace tables{
 
     template<>
     constexpr std::array<std::uint64_t, table_size(PieceType::KING)> populate_table<PieceType::KING>(){
+        using namespace bitboard;
         std::array<std::uint64_t, 64> table{};
-        auto dirs = bitboard::get_directions(PieceType::KING);
+        auto dirs = get_directions(PieceType::KING);
         int i = 0;
         for(std::uint64_t pos = 1; pos; pos <<= 1, i++){ 
             for(int j = 0; j < 8; j++){
-                table[i] |= bitboard::slide(pos, dirs[j]);
+                table[i] |= slide(pos, dirs[j]);
             }
         }
         return table;

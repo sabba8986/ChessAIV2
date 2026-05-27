@@ -1,8 +1,6 @@
 #include "interface.hpp"
 #include "Board.hpp"
 #include <cstdint>
-#include <x86intrin.h>
-#include <iostream>
 
 Board current_board;
 
@@ -15,12 +13,11 @@ int type_of_piece(int i){
 }
 
 bool is_white_piece(int i){
-    return (current_board.layout())[i].is_white;
+    return (current_board.layout())[i].color == WHITE;
 }
 
 std::uint64_t get_attack(int sq){
-    std::uint64_t c = current_board.get_attack(sq);
-    return c;
+    return current_board.get_attack(sq);
 }
 
 void make_move(int s, int d){

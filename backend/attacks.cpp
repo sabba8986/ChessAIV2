@@ -1,6 +1,6 @@
 #include "attacks.hpp"
 #include "constants.hpp"
-#include <iostream>
+
 std::uint64_t attacks::rook_attacks(int sq, std::uint64_t allies, std::uint64_t enemies){
     const auto& info = tables::rook_magics[sq];
     std::uint64_t occupancy = (allies | enemies) & info.mask;

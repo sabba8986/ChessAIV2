@@ -1,7 +1,7 @@
 #ifndef PIECE
 #define PIECE
 
-enum class PieceType: int{
+enum PieceType: int{
     PAWN = 0, 
     ROOK = 1, 
     KNIGHT = 2, 
@@ -11,8 +11,14 @@ enum class PieceType: int{
     EMPTY = 6
 };
 
+enum Color: int{
+    WHITE = 0, 
+    BLACK = 1
+};
+
+
 struct Piece{
-    bool is_white;
+    Color color;
     PieceType type;
 };
 

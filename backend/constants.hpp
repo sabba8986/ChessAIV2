@@ -32,15 +32,17 @@ namespace defaults{
                 if(pos & white_init[j]){
                     matched = true;
                     pieces[i].type = static_cast<PieceType>(j);
-                    pieces[i].is_white = true;
+                    pieces[i].color = WHITE;
                 }
                 else if(pos & black_init[j]){
                     matched = true;
                     pieces[i].type = static_cast<PieceType>(j);
+                    pieces[i].color = BLACK;
                 }
             }
             if(!matched){
-                pieces[i].type = PieceType::EMPTY;
+                pieces[i].type = EMPTY;
+
             }
         }
         return pieces;
@@ -138,8 +140,8 @@ namespace tables{
 
     constexpr std::size_t table_size(PieceType p){
         switch(p){
-            case PieceType::ROOK: return 102400ul;
-            case PieceType::BISHOP: return 5248;
+            case ROOK: return 102400ul;
+            case BISHOP: return 5248;
             default: return 64;
         }
     }
@@ -156,7 +158,7 @@ namespace tables{
         auto dir1 = dirs[0], dir2 = dirs[1], dir3 = dirs[2], dir4 = dirs[3];
         int i = 0;
         for(std::uint64_t pos = 1; pos; pos <<= 1, i++){
-            const MagicInfo& magic_info = (p == PieceType::ROOK) ? rook_magics[i] : bishop_magics[i]; 
+            const MagicInfo& magic_info = (p == ROOK) ? rook_magics[i] : bishop_magics[i]; 
             for(std::uint64_t u = internal_slide(pos, dir1); ; u = internal_slide(u, dir1)){
                 for(std::uint64_t r = internal_slide(pos, dir2); ; r = internal_slide(r, dir2)){
                     for(std::uint64_t d = internal_slide(pos, dir3); ; d = internal_slide(d, dir3)){
@@ -186,7 +188,7 @@ namespace tables{
     }
 
     template<>
-    constexpr std::array<std::uint64_t, table_size(PieceType::KNIGHT)> populate_table<PieceType::KNIGHT>(){
+    constexpr std::array<std::uint64_t, table_size(KNIGHT)> populate_table<KNIGHT>(){
         using namespace bitboard;
         std::array<std::uint64_t, 8> direction_valid = {
             18229723555195321344ull,
@@ -199,7 +201,7 @@ namespace tables{
             18374403900871409664ull
         };
         std::array<std::uint64_t, 64> table{};
-        auto dirs = bitboard::get_directions(PieceType::KNIGHT); 
+        auto dirs = bitboard::get_directions(KNIGHT); 
         int i = 0;
         for(std::uint64_t pos = 1; pos; pos <<= 1, i++){
             for(int j = 0; j < 8; j++){
@@ -210,10 +212,10 @@ namespace tables{
     }
 
     template<>
-    constexpr std::array<std::uint64_t, table_size(PieceType::KING)> populate_table<PieceType::KING>(){
+    constexpr std::array<std::uint64_t, table_size(KING)> populate_table<KING>(){
         using namespace bitboard;
         std::array<std::uint64_t, 64> table{};
-        auto dirs = get_directions(PieceType::KING);
+        auto dirs = get_directions(KING);
         int i = 0;
         for(std::uint64_t pos = 1; pos; pos <<= 1, i++){ 
             for(int j = 0; j < 8; j++){
@@ -223,10 +225,10 @@ namespace tables{
         return table;
     }
 
-    constexpr std::array<std::uint64_t, table_size(PieceType::ROOK)> rook_attacks = populate_table<PieceType::ROOK>();
-    constexpr std::array<std::uint64_t, table_size(PieceType::BISHOP)> bishop_attacks = populate_table<PieceType::BISHOP>();
-    constexpr std::array<std::uint64_t, table_size(PieceType::KNIGHT)> knight_attacks = populate_table<PieceType::KNIGHT>();
-    constexpr std::array<std::uint64_t, table_size(PieceType::KING)> king_attacks = populate_table<PieceType::KING>();
+    constexpr std::array<std::uint64_t, table_size(ROOK)> rook_attacks = populate_table<ROOK>();
+    constexpr std::array<std::uint64_t, table_size(BISHOP)> bishop_attacks = populate_table<BISHOP>();
+    constexpr std::array<std::uint64_t, table_size(KNIGHT)> knight_attacks = populate_table<KNIGHT>();
+    constexpr std::array<std::uint64_t, table_size(KING)> king_attacks = populate_table<KING>();
 }
 
 #endif

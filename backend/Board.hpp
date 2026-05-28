@@ -2,9 +2,10 @@
 #define BOARD
 
 #include "Piece.hpp"
+#include "MoveInfo.hpp"
 #include <cstdint>
 #include <array>
-
+#include <bit>
 
 class Board{
     //bitboards for each color ({WHITE, BLACK}). Pieces are in the order of: 
@@ -12,17 +13,21 @@ class Board{
     std::array<std::array<std::uint64_t, 7>, 2> bitboards;
     std::array<std::uint64_t, 2> all_pieces;
     std::array<Piece, 64> pieces;
+    std::array<bool, 2> in_check;
 
-    void do_make_move(int s, int d);
-    std::uint64_t checkers(Color c);
+
+    std::uint64_t get_checkers(Color c) const;
     std::uint64_t pinner(int sq);
+
+    void undo_previous_move(MoveInfo move);
 
 public:
     Board();
     const std::array<Piece, 64>& layout() const;
-    std::uint64_t get_attack(int sq) const;
-    void make_move(int s, int d);
-    bool in_check(Color c);
+    std::uint64_t get_attacks(int sq) const;
+    std::uint64_t get_legal_attacks(int sq);
+    MoveInfo make_move(int s, int d);
+
     void reset();
 };
 #endif

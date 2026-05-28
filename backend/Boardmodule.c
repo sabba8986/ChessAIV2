@@ -6,7 +6,7 @@ const char *reps = "prnbqk_";
 extern void create_board();
 extern int type_of_piece(int i);
 extern bool is_white_piece(int i);
-extern uint64_t get_attack(int sq); 
+extern uint64_t get_legal_attacks(int sq); 
 extern void make_move(int s, int d);
 
 static PyObject *BoardError = NULL;
@@ -43,13 +43,13 @@ static PyObject *py_get_icon_indices(PyObject *self, PyObject *args){
     return board;
 }
 
-static PyObject *py_get_attack(PyObject *self, PyObject *args){
+static PyObject *py_get_legal_attacks(PyObject *self, PyObject *args){
     PyObject *non_captures = PyList_New(0);
     PyObject *captures = PyList_New(0);
     if(captures == NULL || non_captures == NULL) return NULL;
     int p;
     if(!PyArg_ParseTuple(args, "i", &p)) return NULL;
-    uint64_t attacks = get_attack(p); 
+    uint64_t attacks = get_legal_attacks(p); 
     bool opp_is_white = !is_white_piece(p);
     while(attacks){
         int sq = __builtin_ctzll(attacks);
@@ -80,7 +80,7 @@ static PyObject *py_make_move(PyObject *self, PyObject *args){
 static PyMethodDef board_funcs[] = {
     {"create_board", py_create_board, METH_VARARGS, "Resets the main board game by creating a new board." }, 
     {"get_board_state", py_get_icon_indices, METH_VARARGS, "Returns a string representation of the board, right to left, bottom to top."},
-    {"get_attack", py_get_attack, METH_VARARGS, "Returns all possible attacks from the given square, as a list of quiet moves and a list of capture moves."},
+    {"get_legal_attacks", py_get_legal_attacks, METH_VARARGS, "Returns all possible attacks from the given square, as a list of quiet moves and a list of capture moves."},
     {"make_move", py_make_move, METH_VARARGS, "Perform a valid move on the board."},
     {NULL, NULL, 0, NULL}
 };

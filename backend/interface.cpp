@@ -16,8 +16,8 @@ bool is_white_piece(int i){
     return (current_board.layout())[i].color == WHITE;
 }
 
-std::uint64_t get_attack(int sq){
-    return current_board.get_attack(sq);
+std::uint64_t get_legal_attacks(int sq){
+    return current_board.get_legal_attacks(sq);
 }
 
 void make_move(int s, int d){

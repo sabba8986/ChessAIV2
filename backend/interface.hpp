@@ -7,7 +7,7 @@ extern "C"{
     void create_board();
     int type_of_piece(int i);
     bool is_white_piece(int i);
-    std::uint64_t get_attack(int sq);
+    std::uint64_t get_legal_attacks(int sq);
     void make_move(int s, int d);
 }
 

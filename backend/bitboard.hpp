@@ -139,6 +139,7 @@ namespace bitboard{
         return attack; 
     }
 
+    [[gnu::used]]
     inline std::string to_string(const std::uint64_t bitboard){
         std::string result;
         result.reserve(78);

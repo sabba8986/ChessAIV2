@@ -86,7 +86,7 @@ class Window(QtWidgets.QWidget):
         for tile in self.highlighted:
             tile.reset()
         self.highlighted = []
-        non_captures, captures = board.get_attack(tileNum)
+        non_captures, captures = board.get_legal_attacks(tileNum)
         for sq in non_captures:
             tile = self.tileLayout.itemAtPosition(*numToPos(sq)).widget()
             self.highlighted.append(tile)

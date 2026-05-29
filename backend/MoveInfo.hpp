@@ -2,13 +2,15 @@
 #define MOVE_INFO
 
 #include "Piece.hpp"
+#include <cstdint>
+#include <array>
 
 struct MoveInfo{
     int from; 
     int to;
     Piece attacker;
     PieceType captured_piece_type;
-    bool prev_check_status;
+    std::array<std::uint64_t, 2> prev_checker;
 };
 
 #endif

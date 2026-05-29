@@ -1,6 +1,9 @@
 #include "interface.hpp"
 #include "Board.hpp"
 #include <cstdint>
+#include <chrono>
+#include <iostream>
+
 
 Board current_board;
 
@@ -17,7 +20,8 @@ bool is_white_piece(int i){
 }
 
 std::uint64_t get_legal_attacks(int sq){
-    return current_board.get_legal_attacks(sq);
+    auto attacks = current_board.get_legal_attacks(sq);
+    return attacks;
 }
 
 void make_move(int s, int d){

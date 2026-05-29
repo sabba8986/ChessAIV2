@@ -229,6 +229,25 @@ namespace tables{
     constexpr std::array<std::uint64_t, table_size(BISHOP)> bishop_attacks = populate_table<BISHOP>();
     constexpr std::array<std::uint64_t, table_size(KNIGHT)> knight_attacks = populate_table<KNIGHT>();
     constexpr std::array<std::uint64_t, table_size(KING)> king_attacks = populate_table<KING>();
+
+    constexpr auto attack_from_piece_to_king = [](){
+        using namespace bitboard;
+        std::array<std::array<std::uint64_t, 64>, 64> table{};
+        for(int i = 0; i < 64; i++){
+            for(int j = i + 1; j < 64; j++){
+                std::uint64_t a = 1ull << i;
+                std::uint64_t b = 1ull << j;
+                std::uint64_t attack_ray = 
+                    (ray<NE>(a) & ray<SW>(b)) | 
+                    (ray<N>(a) & ray<S>(b)) | 
+                    (ray<NW>(a) & ray<SE>(b)) | 
+                    (ray<W>(a) & ray<E>(b)); 
+                table[i][j] = attack_ray | a;
+                table[j][i] = attack_ray | b;
+            }
+        }
+        return table;
+    }();
 }
 
 #endif

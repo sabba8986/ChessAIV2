@@ -16,11 +16,11 @@ std::uint64_t attacks::pawn_attacks(int sq, Color c, std::uint64_t allies, std::
     std::uint64_t forward;
     if(c == WHITE){
         forward = slide<N>(pos) & ~occupancy;
-        forward |= slide<N>(forward & white_two_square_mask);
+        forward |= slide<N>(forward & white_two_square_mask) & ~occupancy;
     }
     else{
         forward = slide<S>(pos) & ~occupancy;
-        forward |= slide<S>(forward & black_two_square_mask);
+        forward |= slide<S>(forward & black_two_square_mask) & ~occupancy;
     }
     return forward | pawn_captures(sq, c, enemies);
 }

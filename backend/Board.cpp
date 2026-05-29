@@ -1,15 +1,18 @@
 #include "Board.hpp"
 #include "constants.hpp"
 #include "attacks.hpp"
-#include <iostream>
+#include <bit>
+
 
 Board::Board(){
     reset();
 }
 
+
 const std::array<Piece, 64>& Board::layout() const{
     return this->pieces;
 }
+
 
 MoveInfo Board::make_move(int s, int d){
     Piece src = pieces[s];
@@ -19,7 +22,7 @@ MoveInfo Board::make_move(int s, int d){
         d, 
         src,
         dest.type,
-        in_check[!src.color]
+        checkers
     };
     std::uint64_t dest_mask = 1ull << d;
     std::uint64_t move_mask = dest_mask | (1ull << s);
@@ -31,17 +34,19 @@ MoveInfo Board::make_move(int s, int d){
     }
     pieces[d] = src;
     pieces[s].type = EMPTY;
-    in_check[!src.color] = (get_checkers(static_cast<Color>(!src.color)) != 0);
+
+    checkers[src.color] = get_checkers(src.color);
+    checkers[!src.color] = get_checkers(static_cast<Color>(!src.color));
     return move;
 }
 
 
 void Board::undo_previous_move(MoveInfo move){
-    auto [s, d, attacker, captured_piece_type, prev_check_status] = move;
+    auto [s, d, attacker, captured_piece_type, prev_checkers] = move;
     pieces[s] = attacker;
     pieces[d].type = captured_piece_type;
     pieces[d].color = static_cast<Color>(!attacker.color);
-    in_check[!attacker.color] = prev_check_status;
+    checkers = prev_checkers;
     std::uint64_t dest_mask = 1ull << d;
     std::uint64_t move_mask = dest_mask | (1ull << s);
     if(captured_piece_type != EMPTY){
@@ -51,6 +56,7 @@ void Board::undo_previous_move(MoveInfo move){
     bitboards[attacker.color][attacker.type] ^= move_mask;
     all_pieces[attacker.color] ^= move_mask;
 }
+
 
 std::uint64_t Board::get_checkers(Color c) const{
     using namespace attacks;
@@ -66,17 +72,17 @@ std::uint64_t Board::get_checkers(Color c) const{
         (king_attacks(king, allies, enemies) & attackers[KING]);
 }
 
+
 //assumes nonempty piece is at sq
 std::uint64_t Board::pinner(int sq){
     const Piece piece = pieces[sq];
     std::uint64_t pos = 1ull << sq;
-    std::uint64_t before_checkers = get_checkers(piece.color);
     bitboards[piece.color][piece.type] ^= pos;
     all_pieces[piece.color] ^= pos;
     std::uint64_t after_checkers = get_checkers(piece.color);
     bitboards[piece.color][piece.type] ^= pos;
     all_pieces[piece.color] ^= pos;
-    return before_checkers ^ after_checkers; 
+    return checkers[piece.color] ^ after_checkers; 
 }
 
 
@@ -96,25 +102,60 @@ std::uint64_t Board::get_attacks(int sq) const{
     }
 }
 
+
 //An exception will occur at get_checkers if the user tries to move a piece that is already attacking the opponent king. 
 //This is because when testing all possible moves that piece may make for legality, 
 //one of those moves will involve capturing the opponent king. 
 //It is not possible to determine if the opponent king is in check, if it doesn't exist on the board!
+//With turns-based moves, this exception will never occur
 std::uint64_t Board::get_legal_attacks(int sq){
     const Piece piece = pieces[sq];
-    std::uint64_t attacks = get_attacks(sq);
-    std::uint64_t legal_moves = 0;
-    while(attacks){
-        std::uint64_t dest = std::countr_zero(attacks);
-        std::uint64_t dest_mask = 1ull << dest;
-        MoveInfo move = make_move(sq, dest);
-        if(get_checkers(piece.color) == 0){
-            legal_moves |= dest_mask;
-        }
-        undo_previous_move(move);
-        attacks ^= dest_mask;
+    //cannot block a double check with a non-king piece
+    if(piece.type == EMPTY || (std::popcount(checkers[piece.color]) == 2 && piece.type != KING)){
+        return 0;
     }
-    return legal_moves;
+    std::uint64_t attacks = get_attacks(sq);
+    if(piece.type == KING){
+        std::uint64_t legal_moves = 0;
+        while(attacks){
+            std::uint64_t dest = std::countr_zero(attacks);
+            std::uint64_t dest_mask = 1ull << dest;
+            MoveInfo move = make_move(sq, dest);
+            if(!in_check(piece.color)){
+                legal_moves |= dest_mask;
+            }
+            undo_previous_move(move);
+            attacks ^= dest_mask;
+        }
+        return legal_moves;
+    }
+    else{
+        //if this point reached, piece is not king and there is at most one checker
+        std::uint64_t pin = pinner(sq);
+        if(pin != 0 && in_check(piece.color)){
+            return 0;
+        }
+        else if(pin != 0){
+            int pin_sq = std::countr_zero(pin);
+            int king_sq = std::countr_zero(bitboards[piece.color][KING]);
+            std::uint64_t line_of_attack = tables::attack_from_piece_to_king[pin_sq][king_sq];
+            return line_of_attack & attacks;
+        }
+        else if(in_check(piece.color)){
+            int checker_sq = std::countr_zero(checkers[piece.color]);
+            int king_sq = std::countr_zero(bitboards[piece.color][KING]);
+            std::uint64_t line_of_attack = tables::attack_from_piece_to_king[checker_sq][king_sq];
+            return line_of_attack & attacks;
+        }
+        else{
+            return attacks;
+        }
+    }
+}
+
+
+bool Board::in_check(Color c){
+    return checkers[c] != 0;
 }
 
 
@@ -123,7 +164,7 @@ void Board::reset(){
     bitboards = {white_init, black_init};
     all_pieces = {all_white_init, all_black_init};
     pieces = pieces_init;
-    in_check = {false, false};
+    checkers = {0, 0};
 }
 
 

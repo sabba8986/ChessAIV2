@@ -15,6 +15,7 @@ class Board{
     std::array<std::uint64_t, 2> checkers;
 
 
+
     std::uint64_t get_checkers(Color c) const;
     std::uint64_t pinner(int sq);
 
@@ -22,7 +23,7 @@ class Board{
 
 public:
     Board();
-    const std::array<Piece, 64>& layout() const;
+    const Piece *layout() const; //for C API
     std::uint64_t get_attacks(int sq) const;
     std::uint64_t get_legal_attacks(int sq);
     MoveInfo make_move(int s, int d);

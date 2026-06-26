@@ -1,7 +1,7 @@
 #ifndef PIECE
 #define PIECE
 
-enum PieceType: int{
+typedef enum{
     PAWN = 0, 
     ROOK = 1, 
     KNIGHT = 2, 
@@ -9,17 +9,16 @@ enum PieceType: int{
     QUEEN = 4, 
     KING = 5, 
     EMPTY = 6
-};
+} PieceType;
 
-enum Color: int{
+typedef enum{
     WHITE = 0, 
     BLACK = 1
-};
+} Color;
 
-
-struct Piece{
+typedef struct{
     Color color;
     PieceType type;
-};
+} Piece;
 
 #endif

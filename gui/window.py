@@ -1,6 +1,6 @@
 from PySide6 import QtCore, QtWidgets, QtGui
 import board 
-from constants import ICONS, TILE_STYLE, CAPTURE_STYLE, NON_CAPTURE_STYLE, BROWN, WHITE 
+from constants import ICONS, TILE_STYLE, CAPTURE_STYLE, NON_CAPTURE_STYLE, CHECK_STYLE, BROWN, WHITE, Color, PieceType 
 
 def numToPos(sq):
     return ((63 - sq) // 8, (63 - sq) % 8)
@@ -27,9 +27,11 @@ class Tile(QtWidgets.QPushButton):
             self.window().selectedSquare = self.tileNum
             self.window().renderAttacks(self.tileNum)
     
-    def highlight(self, isCapture):
+    def highlight(self, isCapture = False, isCheck = False):
         self.highlighted = True
-        if isCapture:
+        if isCheck:
+            self.setStyleSheet(CHECK_STYLE)
+        elif isCapture:
             self.setStyleSheet(CAPTURE_STYLE)
         else:
             self.setStyleSheet(NON_CAPTURE_STYLE)
@@ -78,8 +80,10 @@ class Window(QtWidgets.QWidget):
                 tile = self.tileLayout.itemAtPosition(i, j).widget()
                 tile.reset()
                 tile.setIcon(ICONS[boardState[index]])
+                if((boardState[index] == "K" and board.in_check(Color.WHITE)) or \
+                    (boardState[index] == "k" and board.in_check(Color.BLACK))):
+                    tile.highlight(isCheck = True)
                 index -= 1
-
         
 
     def renderAttacks(self, tileNum):

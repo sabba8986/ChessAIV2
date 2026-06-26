@@ -9,8 +9,8 @@ Board::Board(){
 }
 
 
-const std::array<Piece, 64>& Board::layout() const{
-    return this->pieces;
+const Piece *Board::layout() const{
+    return this->pieces.data();
 }
 
 
@@ -166,5 +166,3 @@ void Board::reset(){
     pieces = pieces_init;
     checkers = {0, 0};
 }
-
-

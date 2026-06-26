@@ -1,13 +1,14 @@
 #define PY_SSIZE_T_CLEAN
+#include "Piece.hpp"
 #include <python3.14/Python.h>
 #include <stdint.h>
 const char *reps = "prnbqk_";
 
 extern void create_board();
-extern int type_of_piece(int i);
-extern bool is_white_piece(int i);
+extern const Piece *pieces();
 extern uint64_t get_legal_attacks(int sq); 
 extern void make_move(int s, int d);
+extern bool in_check(Color c);
 
 static PyObject *BoardError = NULL;
 
@@ -33,9 +34,11 @@ static PyObject *py_create_board(PyObject *self, PyObject *args){
 static PyObject *py_get_icon_indices(PyObject *self, PyObject *args){
     PyObject *board = PyUnicode_New(64, 127); 
     if(board == NULL) return NULL;
+    const Piece *piece_list = pieces();
     for(int i = 0; i < 64; i++){
-        char piece = reps[type_of_piece(i)];
-        if(piece != '_' && is_white_piece(i)){
+        const Piece piece_struct = piece_list[i];
+        char piece = reps[piece_struct.type];
+        if(piece != '_' && piece_struct.color == WHITE){
             piece -= 32; //converts to uppercase
         }
         PyUnicode_WriteChar(board, i, piece);
@@ -47,15 +50,17 @@ static PyObject *py_get_legal_attacks(PyObject *self, PyObject *args){
     PyObject *non_captures = PyList_New(0);
     PyObject *captures = PyList_New(0);
     if(captures == NULL || non_captures == NULL) return NULL;
-    int p;
-    if(!PyArg_ParseTuple(args, "i", &p)) return NULL;
-    uint64_t attacks = get_legal_attacks(p); 
-    bool opp_is_white = !is_white_piece(p);
+    int piece_idx;
+    if(!PyArg_ParseTuple(args, "i", &piece_idx)) return NULL;
+    uint64_t attacks = get_legal_attacks(piece_idx);
+    const Piece *piece_list = pieces();
+    bool opp_color = !piece_list[piece_idx].color;
     while(attacks){
         int sq = __builtin_ctzll(attacks);
         PyObject *num = PyLong_FromLong(sq);
         if(num == NULL) return NULL;
-        if(reps[type_of_piece(sq)] != '_' && (is_white_piece(sq) == opp_is_white)){
+        const Piece piece = piece_list[sq];
+        if(piece.type != EMPTY && piece.color == opp_color){
             if(PyList_Append(captures, num)) return NULL;
         }
         else{
@@ -77,11 +82,26 @@ static PyObject *py_make_move(PyObject *self, PyObject *args){
     Py_RETURN_NONE;
 }
 
+static PyObject *py_in_check(PyObject *self, PyObject *args){
+    int color;
+    if(!PyArg_ParseTuple(args, "i", &color)){
+        return NULL;
+    }
+    if(in_check((Color)color)){
+        Py_RETURN_TRUE;
+    }
+    else{
+        Py_RETURN_FALSE;
+    }
+}
+
+
 static PyMethodDef board_funcs[] = {
     {"create_board", py_create_board, METH_VARARGS, "Resets the main board game by creating a new board." }, 
     {"get_board_state", py_get_icon_indices, METH_VARARGS, "Returns a string representation of the board, right to left, bottom to top."},
     {"get_legal_attacks", py_get_legal_attacks, METH_VARARGS, "Returns all possible attacks from the given square, as a list of quiet moves and a list of capture moves."},
     {"make_move", py_make_move, METH_VARARGS, "Perform a valid move on the board."},
+    {"in_check", py_in_check, METH_VARARGS, "Returns whether the king of the specified color is in check."},
     {NULL, NULL, 0, NULL}
 };
 

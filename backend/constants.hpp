@@ -3,7 +3,7 @@
 #include<array>
 #include<cstdint>
 #include "bitboard.hpp"
-#include "Piece.hpp"
+#include "piece.hpp"
 #include <algorithm>
 #include <bit>
 
@@ -22,7 +22,7 @@ namespace defaults{
                         [](const auto& board){return std::byteswap(board);});
         return init;
     }();
-
+    
     constexpr std::array<Piece, 64> pieces_init = [](){ 
         std::array<Piece, 64> pieces{};
         int i = 0;
@@ -63,6 +63,8 @@ namespace defaults{
         }
         return pieces;
     }();
+
+    constexpr std::uint8_t castle_rights_init = 15;
 }
 
 

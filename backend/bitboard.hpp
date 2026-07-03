@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <string>
-#include "Piece.hpp"
+#include "piece.hpp"
 
 
 namespace bitboard{

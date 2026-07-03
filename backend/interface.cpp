@@ -1,5 +1,5 @@
 #include "interface.hpp"
-#include "Board.hpp"
+#include "board.hpp"
 #include <cstdint>
 
 

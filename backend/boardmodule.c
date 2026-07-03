@@ -1,7 +1,8 @@
 #define PY_SSIZE_T_CLEAN
-#include "Piece.hpp"
+#include "piece.hpp"
 #include <python3.14/Python.h>
 #include <stdint.h>
+#include "boardstatemodule.c"
 const char *reps = "prnbqk_";
 
 extern void create_board();
@@ -19,6 +20,12 @@ static int board_module_exec(PyObject *o){
     }
     BoardError = PyErr_NewException("board.error", NULL, NULL);
     if(PyModule_AddObjectRef(o, "BoardError", BoardError) < 0){
+        return -1;
+    }
+    if(PyType_Ready(&BoardStateType) < 0){
+        return -1;
+    }
+    if(PyModule_AddObjectRef(o, "BoardState", (PyObject*)&BoardStateType) < 0){
         return -1;
     }
     return 0;
@@ -108,6 +115,7 @@ static PyMethodDef board_funcs[] = {
 
 static PyModuleDef_Slot board_module_slots[] = {
     {Py_mod_exec, board_module_exec},
+    {Py_mod_exec, board_state_exec},
     {Py_mod_multiple_interpreters, Py_MOD_MULTIPLE_INTERPRETERS_NOT_SUPPORTED},
     {0, NULL}
 };

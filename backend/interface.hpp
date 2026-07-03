@@ -1,6 +1,6 @@
 #ifndef INTERFACE 
 #define INTERFACE
-#include "Piece.hpp"
+#include "piece.hpp"
 #include <cstdint>
 
 

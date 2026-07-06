@@ -1,6 +1,7 @@
 from PySide6 import QtCore, QtWidgets, QtGui
-import board 
+import board
 from constants import ICONS, TILE_STYLE, CAPTURE_STYLE, NON_CAPTURE_STYLE, CHECK_STYLE, BROWN, WHITE, Color, PieceType 
+
 
 def numToPos(sq):
     return ((63 - sq) // 8, (63 - sq) % 8)

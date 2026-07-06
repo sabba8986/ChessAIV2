@@ -17,13 +17,8 @@ enum Color{
 };
 
 struct Piece{
-#ifdef __cplusplus
     Color color;
     PieceType type;
-#else
-    enum Color color;
-    enum PieceType type;
-#endif
 };
 
 #endif

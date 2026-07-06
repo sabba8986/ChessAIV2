@@ -14,6 +14,7 @@ UndoMove& UndoMove::operator=(UndoMove&& other){
     m_captured_piece_type = other.m_captured_piece_type;
     m_castle_rights = other.m_castle_rights;
     m_clock = other.m_clock;
+    return *this;
 }
 
 

@@ -8,9 +8,7 @@
 #include <cstdint>
 #include <array>
 #include <stack>
-
-
-struct BoardState;
+#include "board_state.hpp"
 
 
 class Board{

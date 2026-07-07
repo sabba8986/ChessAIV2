@@ -3,19 +3,19 @@ from board import Piece, Color, PieceType
 
 
 ICONS = {
-    Piece(Color.BLACK, PieceType.EMPTY): QIcon(),
-    Piece(Color.BLACK, PieceType.PAWN): QIcon("../assets/icons/pieces/black_pawn.svg"),
-    Piece(Color.BLACK, PieceType.ROOK): QIcon("../assets/icons/pieces/black_rook.svg"),
-    Piece(Color.BLACK, PieceType.KNIGHT): QIcon("../assets/icons/pieces/black_knight.svg"),
-    Piece(Color.BLACK, PieceType.BISHOP): QIcon("../assets/icons/pieces/black_bishop.svg"),
-    Piece(Color.BLACK, PieceType.QUEEN): QIcon("../assets/icons/pieces/black_queen.svg"),
-    Piece(Color.BLACK, PieceType.KING): QIcon("../assets/icons/pieces/black_king.svg"),
-    Piece(Color.WHITE, PieceType.PAWN): QIcon("../assets/icons/pieces/white_pawn.svg"),
-    Piece(Color.WHITE, PieceType.ROOK): QIcon("../assets/icons/pieces/white_rook.svg"),
-    Piece(Color.WHITE, PieceType.KNIGHT): QIcon("../assets/icons/pieces/white_knight.svg"),
-    Piece(Color.WHITE, PieceType.BISHOP): QIcon("../assets/icons/pieces/white_bishop.svg"),
-    Piece(Color.WHITE, PieceType.QUEEN): QIcon("../assets/icons/pieces/white_queen.svg"),
-    Piece(Color.WHITE, PieceType.KING): QIcon("../assets/icons/pieces/white_king.svg")
+    Piece.EMPTY: QIcon(),
+    Piece.BLACK_PAWN: QIcon("../assets/icons/pieces/black_pawn.svg"),
+    Piece.BLACK_ROOK: QIcon("../assets/icons/pieces/black_rook.svg"),
+    Piece.BLACK_KNIGHT: QIcon("../assets/icons/pieces/black_knight.svg"),
+    Piece.BLACK_BISHOP: QIcon("../assets/icons/pieces/black_bishop.svg"),
+    Piece.BLACK_QUEEN: QIcon("../assets/icons/pieces/black_queen.svg"),
+    Piece.BLACK_KING: QIcon("../assets/icons/pieces/black_king.svg"),
+    Piece.WHITE_PAWN: QIcon("../assets/icons/pieces/white_pawn.svg"),
+    Piece.WHITE_ROOK: QIcon("../assets/icons/pieces/white_rook.svg"),
+    Piece.WHITE_KNIGHT: QIcon("../assets/icons/pieces/white_knight.svg"),
+    Piece.WHITE_BISHOP: QIcon("../assets/icons/pieces/white_bishop.svg"),
+    Piece.WHITE_QUEEN: QIcon("../assets/icons/pieces/white_queen.svg"),
+    Piece.WHITE_KING: QIcon("../assets/icons/pieces/white_king.svg")
 }
 
 BROWN = "#B88B4A"

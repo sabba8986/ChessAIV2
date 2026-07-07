@@ -25,7 +25,7 @@ bool Move::is_promotion(){
 
 
 PieceType Move::promoted_type(){
-    return is_promotion() ? static_cast<PieceType>(((move & promotion_mask) >> 14) + 1) : EMPTY;
+    return is_promotion() ? static_cast<PieceType>(((move & promotion_mask) >> 14) + 1) : PieceType::EMPTY;
 }
 
 

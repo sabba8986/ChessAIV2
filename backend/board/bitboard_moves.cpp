@@ -5,7 +5,7 @@
 std::uint64_t bitboard_moves::pawn_captures(int sq, Color c, std::uint64_t enemies){
     using namespace bitboard;
     std::uint64_t pos = 1ull << sq;
-    return ((c == WHITE) ? slide<NE>(pos) | slide<NW>(pos) : slide<SE>(pos) | slide<SW>(pos)) & enemies;
+    return ((c == Color::WHITE) ? slide<NE>(pos) | slide<NW>(pos) : slide<SE>(pos) | slide<SW>(pos)) & enemies;
 }
 
 
@@ -16,12 +16,12 @@ std::uint64_t bitboard_moves::pawn_en_passant(int sq, Color c, int en_passant_sq
 
 std::uint64_t bitboard_moves::pawn(int sq, Color c, std::uint64_t allies, std::uint64_t enemies){
     using namespace bitboard;
-    constexpr std::uint64_t white_two_square_mask = slide<N>(defaults::white_init[PAWN]);
-    constexpr std::uint64_t black_two_square_mask = slide<S>(defaults::black_init[PAWN]);
+    constexpr std::uint64_t white_two_square_mask = slide<N>(defaults::bitboards_init[static_cast<int>(Piece::WHITE_PAWN)]);
+    constexpr std::uint64_t black_two_square_mask = slide<S>(defaults::bitboards_init[static_cast<int>(Piece::BLACK_PAWN)]);
     std::uint64_t pos = 1ull << sq;
     std::uint64_t occupancy = allies | enemies;
     std::uint64_t forward;
-    if(c == WHITE){
+    if(c == Color::WHITE){
         forward = slide<N>(pos) & ~occupancy;
         forward |= slide<N>(forward & white_two_square_mask) & ~occupancy;
     }

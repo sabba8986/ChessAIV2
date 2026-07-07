@@ -19,27 +19,30 @@ BoardState get_board_state(){
 PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
     m.doc() = "plugin to the C++ board engine";
     py::enum_<Color>(m, "Color")
-        .value("WHITE", Color::WHITE, "Represents a white piece.")
-        .value("BLACK", Color::BLACK, "Represents a black piece.");
+        .value("WHITE", Color::WHITE)
+        .value("BLACK", Color::BLACK);
     py::enum_<PieceType>(m, "PieceType")
-        .value("PAWN", PieceType::PAWN, "Represents a pawn.")
-        .value("ROOK", PieceType::ROOK, "Represents a rook.")
-        .value("KNIGHT", PieceType::KNIGHT, "Represents a knight")
-        .value("BISHOP", PieceType::BISHOP, "Represents a bishop.")
-        .value("QUEEN", PieceType::QUEEN, "Represents a queen")
-        .value("KING", PieceType::KING, "Represents a king.")
-        .value("EMPTY", PieceType::EMPTY, "Represents no piece.");
-    py::class_<Piece>(m, "Piece")
-        .def(py::init(
-            [](Color c, PieceType p)-> Piece{
-                return {c, p};
-            }))
-        .def("__eq__", 
-            [](Piece a, Piece b){
-                return (a.type == EMPTY && b.type == EMPTY) || (a.type == b.type && a.color == b.color);
-            })
-        .def_readwrite("color", &Piece::color)
-        .def_readwrite("type", &Piece::type);
+        .value("PAWN", PieceType::PAWN)
+        .value("ROOK", PieceType::ROOK)
+        .value("KNIGHT", PieceType::KNIGHT)
+        .value("BISHOP", PieceType::BISHOP)
+        .value("QUEEN", PieceType::QUEEN)
+        .value("KING", PieceType::KING)
+        .value("EMPTY", PieceType::EMPTY);
+    py::enum_<Piece>(m, "Piece")
+        .value("EMPTY", Piece::EMPTY)
+        .value("WHITE_PAWN", Piece::WHITE_PAWN)
+        .value("WHITE_ROOK", Piece::WHITE_ROOK)
+        .value("WHITE_KNIGHT", Piece::WHITE_KNIGHT)
+        .value("WHITE_BISHOP", Piece::WHITE_BISHOP)
+        .value("WHITE_QUEEN", Piece::WHITE_QUEEN)
+        .value("WHITE_KING", Piece::WHITE_KING)
+        .value("BLACK_PAWN", Piece::BLACK_PAWN)
+        .value("BLACK_ROOK", Piece::BLACK_ROOK)
+        .value("BLACK_KNIGHT", Piece::BLACK_KNIGHT)
+        .value("BLACK_BISHOP", Piece::BLACK_BISHOP)
+        .value("BLACK_QUEEN", Piece::BLACK_QUEEN)
+        .value("BLACK_KING", Piece::BLACK_KING);
     py::class_<Move>(m, "Move")
         .def("src", &Move::src)
         .def("dest", &Move::dest)

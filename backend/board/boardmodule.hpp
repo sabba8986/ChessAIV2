@@ -4,3 +4,4 @@
 
 void reset();
 BoardState get_board_state();
+void make_move(Move move);

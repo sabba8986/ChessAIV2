@@ -18,13 +18,13 @@ namespace defaults{
         pieces[0] = pieces[7] = Piece::WHITE_ROOK;
         pieces[1] = pieces[6] = Piece::WHITE_KNIGHT;
         pieces[2] = pieces[5] = Piece::WHITE_BISHOP;
-        pieces[3] = Piece::WHITE_QUEEN;
-        pieces[4] = Piece::WHITE_KING;
+        pieces[3] = Piece::WHITE_KING;
+        pieces[4] = Piece::WHITE_QUEEN;
         pieces[56] = pieces[63] = Piece::BLACK_ROOK;
         pieces[57] = pieces[62] = Piece::BLACK_KNIGHT;
         pieces[58] = pieces[61] = Piece::BLACK_BISHOP;
-        pieces[59] = Piece::BLACK_QUEEN;
-        pieces[60] = Piece::BLACK_KING;
+        pieces[59] = Piece::BLACK_KING;
+        pieces[60] = Piece::BLACK_QUEEN;
         for(int i = 0; i < 8; i++){
             pieces[8 + i] = Piece::WHITE_PAWN;
             pieces[48 + i] = Piece::BLACK_PAWN;

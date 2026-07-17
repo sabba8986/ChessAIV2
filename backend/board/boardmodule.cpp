@@ -15,6 +15,9 @@ BoardState get_board_state(){
     return current_board.get_board_state();
 }
 
+void make_move(Move move){
+    current_board.make_move(move);
+}
 
 PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
     m.doc() = "plugin to the C++ board engine";
@@ -61,4 +64,5 @@ PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
         .def("piece", &BoardState::piece);
     m.def("reset", &reset, "Resets the state of the board");
     m.def("get_board_state", &get_board_state, "Get the current state of the board");
+    m.def("make_move", &make_move, "Execute the specified move on the board");
 }

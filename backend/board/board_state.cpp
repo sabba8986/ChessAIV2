@@ -3,7 +3,7 @@
 
 BoardState::BoardState(Board& board): m_pieces{board.pieces}, m_in_check{{board.in_check(Color::WHITE), board.in_check(Color::BLACK)}}{
     for(int sq = 0; sq < 64; sq++){
-       m_move_lists[sq] = get_color(m_pieces[sq]) == board.turn ? board.get_legal_moves(sq) : MoveList();
+       m_move_lists[sq] = board.get_legal_moves(sq);
     }
 }
 

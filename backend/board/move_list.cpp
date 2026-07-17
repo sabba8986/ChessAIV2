@@ -1,19 +1,19 @@
 #include "move_list.hpp"
 
 
-MoveList::MoveList(): num_moves{0} {}
+MoveList::MoveList(): m_num_moves{0}, m_cur_move_idx{0}, m_moves{} {}
 
 
 void MoveList::add_move(Move move){
-    moves[num_moves++] = move;
+    m_moves[m_num_moves++] = move;
 }
 
 
 int MoveList::size(){
-    return num_moves;
+    return m_num_moves;
 }
 
 
 Move MoveList::operator[](int move_num){
-    return moves[move_num];
+    return m_moves[move_num];
 }

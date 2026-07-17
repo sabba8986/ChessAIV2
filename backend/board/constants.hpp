@@ -4,8 +4,6 @@
 #include<cstdint>
 #include "bitboard.hpp"
 #include "piece.hpp"
-#include <algorithm>
-#include <bit>
 
 struct MagicInfo{
     std::uint64_t mask;
@@ -15,54 +13,51 @@ struct MagicInfo{
 };
 
 namespace defaults{
-    constexpr std::array<std::uint64_t, 7> white_init = {255ull << 8, 129, 66, 36, 16, 8, 0};
-    constexpr std::array<std::uint64_t, 7> black_init = [](){
-        std::array<std::uint64_t, 7> init;
-        std::transform(white_init.begin(), white_init.end(), init.begin(), 
-                        [](const auto& board){return std::byteswap(board);});
-        return init;
-    }();
-    
     constexpr std::array<Piece, 64> pieces_init = [](){ 
         std::array<Piece, 64> pieces{};
-        int i = 0;
-        for(std::uint64_t pos = 1; pos; pos <<= 1, i++){
-            bool matched = false;
-            for(int j = 0; j < 6; j++){
-                if(pos & white_init[j]){
-                    matched = true;
-                    pieces[i].type = static_cast<PieceType>(j);
-                    pieces[i].color = WHITE;
-                }
-                else if(pos & black_init[j]){
-                    matched = true;
-                    pieces[i].type = static_cast<PieceType>(j);
-                    pieces[i].color = BLACK;
-                }
+        pieces[0] = pieces[7] = Piece::WHITE_ROOK;
+        pieces[1] = pieces[6] = Piece::WHITE_KNIGHT;
+        pieces[2] = pieces[5] = Piece::WHITE_BISHOP;
+        pieces[3] = Piece::WHITE_KING;
+        pieces[4] = Piece::WHITE_QUEEN;
+        pieces[56] = pieces[63] = Piece::BLACK_ROOK;
+        pieces[57] = pieces[62] = Piece::BLACK_KNIGHT;
+        pieces[58] = pieces[61] = Piece::BLACK_BISHOP;
+        pieces[59] = Piece::BLACK_KING;
+        pieces[60] = Piece::BLACK_QUEEN;
+        for(int i = 0; i < 8; i++){
+            pieces[8 + i] = Piece::WHITE_PAWN;
+            pieces[48 + i] = Piece::BLACK_PAWN;
+        }
+        return pieces;
+    }();
+
+    constexpr std::array<std::uint64_t, 14> bitboards_init = [](){
+        int sq = 0;
+        std::array<std::uint64_t, 14> bitboards{};
+        for(std::uint64_t trav = 1; trav; trav <<= 1){
+            int i = to_int(pieces_init[sq]);
+            bitboards[i] |= 1ull << sq;
+            sq++;
+        }
+        return bitboards;
+    }();
+
+
+    constexpr std::array<std::uint64_t, 2> all_pieces_init = [](){
+        std::array<std::uint64_t, 2> all_pieces{};
+        std::array<Color, 2> colors = {Color::WHITE, Color::BLACK};
+        std::array<PieceType, 6> types = {PieceType::PAWN, PieceType::ROOK, PieceType::KNIGHT, PieceType::BISHOP, PieceType::QUEEN, PieceType::KING};
+        for(Color c: colors){
+            int color_idx = static_cast<int>(c);
+            for(PieceType p: types){
+                int piece_idx = static_cast<int>(to_piece(c, p));
+                all_pieces[color_idx] |= bitboards_init[piece_idx];
             }
-            if(!matched){
-                pieces[i].type = EMPTY;
-
-            }
         }
-        return pieces;
+        return all_pieces;
     }();
 
-    constexpr std::uint64_t all_white_init = [](){
-        std::uint64_t pieces = 0;
-        for(auto occ: white_init){
-            pieces |= occ;
-        }
-        return pieces;
-    }();
-
-    constexpr std::uint64_t all_black_init = [](){
-        std::uint64_t pieces = 0;
-        for(auto occ: black_init){
-            pieces |= occ;
-        }
-        return pieces;
-    }();
 
     constexpr std::uint8_t castle_rights_init = 15;
 }
@@ -142,8 +137,8 @@ namespace tables{
 
     constexpr std::size_t table_size(PieceType p){
         switch(p){
-            case ROOK: return 102400ul;
-            case BISHOP: return 5248;
+            case PieceType::ROOK: return 102400ul;
+            case PieceType::BISHOP: return 5248;
             default: return 64;
         }
     }
@@ -160,7 +155,7 @@ namespace tables{
         auto dir1 = dirs[0], dir2 = dirs[1], dir3 = dirs[2], dir4 = dirs[3];
         int i = 0;
         for(std::uint64_t pos = 1; pos; pos <<= 1, i++){
-            const MagicInfo& magic_info = (p == ROOK) ? rook_magics[i] : bishop_magics[i]; 
+            const MagicInfo& magic_info = (p == PieceType::ROOK) ? rook_magics[i] : bishop_magics[i]; 
             for(std::uint64_t u = internal_slide(pos, dir1); ; u = internal_slide(u, dir1)){
                 for(std::uint64_t r = internal_slide(pos, dir2); ; r = internal_slide(r, dir2)){
                     for(std::uint64_t d = internal_slide(pos, dir3); ; d = internal_slide(d, dir3)){
@@ -190,7 +185,7 @@ namespace tables{
     }
 
     template<>
-    constexpr std::array<std::uint64_t, table_size(KNIGHT)> populate_table<KNIGHT>(){
+    constexpr std::array<std::uint64_t, table_size(PieceType::KNIGHT)> populate_table<PieceType::KNIGHT>(){
         using namespace bitboard;
         std::array<std::uint64_t, 8> direction_valid = {
             18229723555195321344ull,
@@ -203,7 +198,7 @@ namespace tables{
             18374403900871409664ull
         };
         std::array<std::uint64_t, 64> table{};
-        auto dirs = bitboard::get_directions(KNIGHT); 
+        auto dirs = bitboard::get_directions(PieceType::KNIGHT); 
         int i = 0;
         for(std::uint64_t pos = 1; pos; pos <<= 1, i++){
             for(int j = 0; j < 8; j++){
@@ -214,10 +209,10 @@ namespace tables{
     }
 
     template<>
-    constexpr std::array<std::uint64_t, table_size(KING)> populate_table<KING>(){
+    constexpr std::array<std::uint64_t, table_size(PieceType::KING)> populate_table<PieceType::KING>(){
         using namespace bitboard;
         std::array<std::uint64_t, 64> table{};
-        auto dirs = get_directions(KING);
+        auto dirs = get_directions(PieceType::KING);
         int i = 0;
         for(std::uint64_t pos = 1; pos; pos <<= 1, i++){ 
             for(int j = 0; j < 8; j++){
@@ -227,10 +222,10 @@ namespace tables{
         return table;
     }
 
-    constexpr std::array<std::uint64_t, table_size(ROOK)> rook_attacks = populate_table<ROOK>();
-    constexpr std::array<std::uint64_t, table_size(BISHOP)> bishop_attacks = populate_table<BISHOP>();
-    constexpr std::array<std::uint64_t, table_size(KNIGHT)> knight_attacks = populate_table<KNIGHT>();
-    constexpr std::array<std::uint64_t, table_size(KING)> king_attacks = populate_table<KING>();
+    constexpr std::array<std::uint64_t, table_size(PieceType::ROOK)> rook_attacks = populate_table<PieceType::ROOK>();
+    constexpr std::array<std::uint64_t, table_size(PieceType::BISHOP)> bishop_attacks = populate_table<PieceType::BISHOP>();
+    constexpr std::array<std::uint64_t, table_size(PieceType::KNIGHT)> knight_attacks = populate_table<PieceType::KNIGHT>();
+    constexpr std::array<std::uint64_t, table_size(PieceType::KING)> king_attacks = populate_table<PieceType::KING>();
 
     constexpr auto attack_from_piece_to_king = [](){
         using namespace bitboard;

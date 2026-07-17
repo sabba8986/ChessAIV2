@@ -1,6 +1,6 @@
 #ifndef MOVES
 #define MOVES
-#include "constants.hpp"
+#include "piece.hpp"
 #include <cstdint>
 #include <x86intrin.h>
 

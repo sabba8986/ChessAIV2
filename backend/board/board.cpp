@@ -101,7 +101,7 @@ void Board::make_move(Move move){
     else{
         move_piece(src, dest);
         if(move.is_promotion()){
-            promote(src, move.promoted_type());
+            promote(dest, move.promoted_type());
         }
         else if(move.is_en_passant()){
             do_en_passant(en_passant_sq);
@@ -196,11 +196,10 @@ void Board::undo_move_piece(int src, int dest, PieceType captured_piece_type){
 }
 
 
-void Board::undo_promote(int sq, PieceType p){
-    Color c = get_color(pieces[sq]);
-    Piece promoted_piece = to_piece(c, p);
-    Piece pawn_piece = to_piece(c, PieceType::PAWN);
-    int pawn_idx = to_int(pieces[sq]);
+void Board::undo_promote(int sq){
+    Piece promoted_piece = pieces[sq];
+    Piece pawn_piece = to_piece(get_color(promoted_piece), PieceType::PAWN);
+    int pawn_idx = to_int(pawn_piece);
     int promoted_idx = to_int(promoted_piece);
     std::uint64_t pos = 1ull << sq;
     bitboards[pawn_idx] ^= pos;
@@ -231,7 +230,7 @@ void Board::undo_last_move(){
     }
     else{
         if(move.is_promotion()){
-            undo_promote(dest, move.promoted_type());
+            undo_promote(dest);
         }
         undo_move_piece(src, dest, undo_info.captured_piece_type());
         if(move.is_en_passant()){

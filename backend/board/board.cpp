@@ -4,7 +4,6 @@
 #include "bitboard_moves.hpp"
 #include "undo_move.hpp"
 #include <bit>
-#include <iostream>
 #include <utility>
 #include <cassert>
 
@@ -25,13 +24,13 @@ void Board::do_castle(int src, int dest){
     int king_idx = to_int(to_piece(castler_color, PieceType::KING));
     if(src < dest){
         bitboards[king_idx] <<= 2;
-        bitboards[rook_idx] ^= ((1ull << dest) | (bitboards[king_idx] >> 1));
+        bitboards[rook_idx] ^= ((1ull << dest) | (1ull << (src + 1)));
         pieces[src + 2] = pieces[src];
         pieces[src + 1] = pieces[dest];
     }
     else{
         bitboards[king_idx] >>= 2;
-        bitboards[rook_idx] ^= ((1ull << dest) | (bitboards[king_idx] << 1));
+        bitboards[rook_idx] ^= ((1ull << dest) | (1ull << (src - 1)));
         pieces[src - 2] = pieces[src];
         pieces[src - 1] = pieces[dest];
     }
@@ -156,22 +155,25 @@ std::uint64_t Board::get_attackers(int sq, Color attacker_color) const{
 
 
 void Board::undo_castle(int src, int dest){
-    Color castler_color = get_color(pieces[src]);
-    int rook_idx = to_int(to_piece(castler_color, PieceType::ROOK));
-    int king_idx = to_int(to_piece(castler_color, PieceType::KING));
     if(src < dest){
+        Color castler_color = get_color(pieces[src + 1]);
+        int rook_idx = to_int(to_piece(castler_color, PieceType::ROOK));
+        int king_idx = to_int(to_piece(castler_color, PieceType::KING));
         pieces[src] = pieces[src + 2];
         pieces[dest] = pieces[src + 1];
         bitboards[king_idx] >>= 2;
-        bitboards[rook_idx] ^= ((1ull << dest) | (bitboards[king_idx] >> 1));
+        bitboards[rook_idx] ^= ((1ull << dest) | (1ull << (src + 1)));
         pieces[src + 2] = Piece::EMPTY;
         pieces[src + 1] = Piece::EMPTY;
     }
     else{
+        Color castler_color = get_color(pieces[src - 1]);
+        int rook_idx = to_int(to_piece(castler_color, PieceType::ROOK));
+        int king_idx = to_int(to_piece(castler_color, PieceType::KING));
         pieces[src] = pieces[src - 2];
         pieces[dest] = pieces[src - 1];
         bitboards[king_idx] <<= 2;
-        bitboards[rook_idx] ^= ((1ull << dest) | (bitboards[king_idx] << 1));
+        bitboards[rook_idx] ^= ((1ull << dest) | (1ull << (src - 1)));
         pieces[src - 2] = Piece::EMPTY;
         pieces[src - 1] = Piece::EMPTY;
     }
@@ -240,6 +242,7 @@ void Board::undo_last_move(){
     castle_rights = undo_info.castle_rights();
     turn = other_color(turn);
     clock = undo_info.clock();
+    recalculate_all_pieces();
     assert_valid();
 }
 
@@ -372,8 +375,8 @@ std::uint64_t Board::get_castle_moves(Color c){
         }
     }
     else{
-        constexpr std::uint64_t black_left_castle_mask = (1ull << 57) | (1ull << 58);
-        constexpr std::uint64_t black_right_castle_mask = (1ull << 60) | (1ull << 61) | (1ull << 62);
+        constexpr std::uint64_t black_left_castle_mask = (1ull << 60) | (1ull << 61) | (1ull << 62);
+        constexpr std::uint64_t black_right_castle_mask = (1ull << 57) | (1ull << 58);
         if((castle_rights & black_left_castle_allowed_flag) && !(occ & black_left_castle_mask) && !get_attackers(60, Color::WHITE) && !get_attackers(61, Color::WHITE)){
             moves |= (1ull << 63);
         }

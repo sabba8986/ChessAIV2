@@ -8,7 +8,6 @@
 struct MoveList {
 private:
     std::uint8_t m_num_moves;
-    std::uint8_t m_cur_move_idx;
     std::array<Move, 256> m_moves;
 public:
     MoveList();

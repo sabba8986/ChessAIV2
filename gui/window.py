@@ -1,4 +1,4 @@
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets, QtGui
 import board
 from board import Piece, Color, Move
 from constants import ICONS, TILE_STYLE, CAPTURE_STYLE, NON_CAPTURE_STYLE, CHECK_STYLE, BROWN, WHITE
@@ -31,10 +31,10 @@ class Tile(QtWidgets.QPushButton):
             
     
     def renderMove(self, move: Move):
-        if(move.is_castle() or move.is_quiet()):
-            self.setStyleSheet(NON_CAPTURE_STYLE)
-        elif(move.is_capture() or move.is_en_passant()):
+        if(move.is_capture() or move.is_en_passant()):
             self.setStyleSheet(CAPTURE_STYLE)
+        elif(move.is_castle() or move.is_quiet()):
+            self.setStyleSheet(NON_CAPTURE_STYLE)
         self.move = move
 
     def renderCheck(self):
@@ -71,9 +71,15 @@ class Window(QtWidgets.QWidget):
         self.selectedSquare = -1
         self.setLayout(self.mainLayout)
 
+        self.undoShortcut = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Z"), self)
+        self.undoShortcut.activated.connect(self.undo_last_move)
+
         board.reset()
         self.renderBoardState()
 
+    def undo_last_move(self):
+        board.undo_last_move()
+        self.renderBoardState()
 
     def renderBoardState(self):
         self.boardState = board.get_board_state()

@@ -48,7 +48,7 @@ class Board{
     std::uint64_t get_quiets_and_captures(int sq) const;
     std::uint64_t get_legal_quiets_and_captures(int sq);
     std::uint64_t get_castle_moves(Color c);
-
+    std::uint64_t get_en_passant_row(Color c);
 public:
     Board();
     MoveList get_legal_moves(int sq);

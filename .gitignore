@@ -1,7 +1,10 @@
 env/
 .clangd
 backend/board_interface.egg-info/
-backend/build/
-backend/dist/
 gui/__pycache__/
 .vscode/
+build/
+backend/board/test.sh
+backend/board/test
+backend/board/main.cpp
+.cache/

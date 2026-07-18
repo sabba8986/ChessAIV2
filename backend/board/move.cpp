@@ -1,4 +1,6 @@
 #include "move.hpp"
+#include <cassert>
+
 
 Move::Move(int src, int dest, std::uint16_t flags, PieceType promoted_type):
     move(src | (dest << 6) | flags | (flags & promotion_flag ? (static_cast<std::uint16_t>(promoted_type) - 1) << 14 : 0)){}
@@ -15,7 +17,7 @@ int Move::dest(){
 
 
 bool Move::is_en_passant(){
-    return (move & en_passant_flag) & !(move & promotion_flag);
+    return (move & en_passant_flag) && !is_promotion();
 }
 
 
@@ -25,12 +27,13 @@ bool Move::is_promotion(){
 
 
 PieceType Move::promoted_type(){
+    assert(is_promotion() && "Move must be a promotion");
     return is_promotion() ? static_cast<PieceType>(((move & promotion_mask) >> 14) + 1) : PieceType::EMPTY;
 }
 
 
 bool Move::is_castle(){
-    return (move & castle_flag) & !(move & promotion_flag);
+    return (move & castle_flag) && !is_promotion();
 }
 
 bool Move::is_capture(){

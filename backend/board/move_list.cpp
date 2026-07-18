@@ -1,7 +1,7 @@
 #include "move_list.hpp"
 
 
-MoveList::MoveList(): m_num_moves{0}, m_cur_move_idx{0}, m_moves{} {}
+MoveList::MoveList(): m_num_moves{0}, m_moves{} {}
 
 
 void MoveList::add_move(Move move){

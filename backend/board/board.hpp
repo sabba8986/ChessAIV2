@@ -39,7 +39,7 @@ class Board{
     void do_en_passant(int en_passant_sq);
     void undo_castle(int src, int dest);
     void undo_move_piece(int src, int dest, PieceType captured_piece_type);
-    void undo_promote(int sq, PieceType p);
+    void undo_promote(int sq);
     void undo_en_passant(int en_passant_sq);
     void recalculate_all_pieces();
     std::uint64_t get_promotion_row(Color c);
@@ -48,7 +48,7 @@ class Board{
     std::uint64_t get_quiets_and_captures(int sq) const;
     std::uint64_t get_legal_quiets_and_captures(int sq);
     std::uint64_t get_castle_moves(Color c);
-
+    std::uint64_t get_en_passant_row(Color c);
 public:
     Board();
     MoveList get_legal_moves(int sq);

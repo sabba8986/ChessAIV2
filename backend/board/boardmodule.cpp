@@ -1,23 +1,11 @@
-#include "boardmodule.hpp"
 #include "board.hpp"
+#include <pybind11/pybind11.h>
 
 namespace py = pybind11;
 
 
 Board current_board;
 
-
-void reset(){
-    current_board.reset();
-}
-
-BoardState get_board_state(){
-    return current_board.get_board_state();
-}
-
-void make_move(Move move){
-    current_board.make_move(move);
-}
 
 PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
     m.doc() = "plugin to the C++ board engine";
@@ -62,7 +50,9 @@ PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
         .def("in_check", &BoardState::in_check)
         .def("move_list", &BoardState::move_list)
         .def("piece", &BoardState::piece);
-    m.def("reset", &reset, "Resets the state of the board");
-    m.def("get_board_state", &get_board_state, "Get the current state of the board");
-    m.def("make_move", &make_move, "Execute the specified move on the board");
+    m.def("reset", [](){current_board.reset();}, "Resets the state of the board");
+    m.def("get_board_state", [](){return current_board.get_board_state();}, "Get the current state of the board");
+    m.def("make_move", [](Move move){current_board.make_move(move);}, "Execute the specified move on the board");
+    m.def("undo_last_move", [](){current_board.undo_last_move();}, "Undoes the last move on the board");
+    m.def("layout", [](){return current_board.layout();}, "Gets the layout of the board as a prettified FEN string");
 }

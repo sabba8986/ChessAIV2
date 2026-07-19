@@ -1,27 +1,42 @@
-from PySide6.QtGui import QIcon
-from board import Piece
+from PySide6.QtGui import QColor, QPen, QBrush
+from PySide6.QtSvg import QSvgRenderer
 from pathlib import Path
+from board import Piece
+
 
 iconsDir = (Path(__file__).resolve().parent.parent) / "assets" / "icons" / "pieces"
 
-ICONS = {
-    Piece.EMPTY: QIcon(),
-    Piece.BLACK_PAWN: QIcon(str(iconsDir / "black_pawn.svg")),
-    Piece.BLACK_ROOK: QIcon(str(iconsDir / "black_rook.svg")),
-    Piece.BLACK_KNIGHT: QIcon(str(iconsDir / "black_knight.svg")),
-    Piece.BLACK_BISHOP: QIcon(str(iconsDir / "black_bishop.svg")),
-    Piece.BLACK_QUEEN: QIcon(str(iconsDir / "black_queen.svg")),
-    Piece.BLACK_KING: QIcon(str(iconsDir / "black_king.svg")),
-    Piece.WHITE_PAWN: QIcon(str(iconsDir / "white_pawn.svg")),
-    Piece.WHITE_ROOK: QIcon(str(iconsDir / "white_rook.svg")),
-    Piece.WHITE_KNIGHT: QIcon(str(iconsDir / "white_knight.svg")),
-    Piece.WHITE_BISHOP: QIcon(str(iconsDir / "white_bishop.svg")),
-    Piece.WHITE_QUEEN: QIcon(str(iconsDir / "white_queen.svg")),
-    Piece.WHITE_KING: QIcon(str(iconsDir / "white_king.svg"))
-}
 
-BROWN = "#B88B4A"
-WHITE = "#E3C16F"
+ICONS: list[QSvgRenderer | None] = [None] * 14
+
+
+def initializeIcons():
+    ICONS[Piece.EMPTY] = QSvgRenderer()
+    ICONS[Piece.WHITE_PAWN] = QSvgRenderer(str(iconsDir / "white_pawn.svg"))
+    ICONS[Piece.WHITE_ROOK] = QSvgRenderer(str(iconsDir / "white_rook.svg"))
+    ICONS[Piece.WHITE_KNIGHT] = QSvgRenderer(str(iconsDir / "white_knight.svg"))
+    ICONS[Piece.WHITE_BISHOP] = QSvgRenderer(str(iconsDir / "white_bishop.svg"))
+    ICONS[Piece.WHITE_QUEEN] = QSvgRenderer(str(iconsDir / "white_queen.svg"))
+    ICONS[Piece.WHITE_KING] = QSvgRenderer(str(iconsDir / "white_king.svg"))
+    ICONS[Piece.BLACK_PAWN] = QSvgRenderer(str(iconsDir / "black_pawn.svg"))
+    ICONS[Piece.BLACK_ROOK] = QSvgRenderer(str(iconsDir / "black_rook.svg"))
+    ICONS[Piece.BLACK_KNIGHT] = QSvgRenderer(str(iconsDir / "black_knight.svg"))
+    ICONS[Piece.BLACK_BISHOP] = QSvgRenderer(str(iconsDir / "black_bishop.svg"))
+    ICONS[Piece.BLACK_QUEEN] = QSvgRenderer(str(iconsDir / "black_queen.svg"))
+    ICONS[Piece.BLACK_KING] = QSvgRenderer(str(iconsDir / "black_king.svg"))
+
+
+BLACK: QColor = QColor(0, 0, 0, 0.30)
+BROWN: QColor = QColor(0xB88B4A)
+WHITE: QColor = QColor(0xE3C16F)
+
+
+BLACK_PEN: QPen = QPen(BLACK)
+
+
+BROWN_BRUSH: QBrush = QBrush(BROWN)
+WHITE_BRUSH: QBrush = QBrush(WHITE)
+
 
 TILE_STYLE = "background-color:{color}; border: black; border-width: thin"
 NON_CAPTURE_STYLE = "background-color:#FFFF00; border: 1px solid black"

@@ -1,5 +1,6 @@
 #include "board.hpp"
 #include <pybind11/pybind11.h>
+#include <pybind11/native_enum.h>
 
 namespace py = pybind11;
 
@@ -9,18 +10,20 @@ Board current_board;
 
 PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
     m.doc() = "plugin to the C++ board engine";
-    py::enum_<Color>(m, "Color")
+    py::native_enum<Color>(m, "Color", "enum.IntEnum")
         .value("WHITE", Color::WHITE)
-        .value("BLACK", Color::BLACK);
-    py::enum_<PieceType>(m, "PieceType")
+        .value("BLACK", Color::BLACK)
+        .finalize();
+    py::native_enum<PieceType>(m, "PieceType", "enum.IntEnum")
         .value("PAWN", PieceType::PAWN)
         .value("ROOK", PieceType::ROOK)
         .value("KNIGHT", PieceType::KNIGHT)
         .value("BISHOP", PieceType::BISHOP)
         .value("QUEEN", PieceType::QUEEN)
         .value("KING", PieceType::KING)
-        .value("EMPTY", PieceType::EMPTY);
-    py::enum_<Piece>(m, "Piece")
+        .value("EMPTY", PieceType::EMPTY)
+        .finalize();
+    py::native_enum<Piece>(m, "Piece", "enum.IntEnum")
         .value("EMPTY", Piece::EMPTY)
         .value("WHITE_PAWN", Piece::WHITE_PAWN)
         .value("WHITE_ROOK", Piece::WHITE_ROOK)
@@ -33,7 +36,8 @@ PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
         .value("BLACK_KNIGHT", Piece::BLACK_KNIGHT)
         .value("BLACK_BISHOP", Piece::BLACK_BISHOP)
         .value("BLACK_QUEEN", Piece::BLACK_QUEEN)
-        .value("BLACK_KING", Piece::BLACK_KING);
+        .value("BLACK_KING", Piece::BLACK_KING)
+        .finalize();
     py::class_<Move>(m, "Move")
         .def("src", &Move::src)
         .def("dest", &Move::dest)

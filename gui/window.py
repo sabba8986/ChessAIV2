@@ -1,7 +1,7 @@
 from PySide6 import QtCore, QtWidgets, QtGui
 import board
 from board import Piece, Color, Move
-from constants import ICONS, TILE_STYLE, CAPTURE_STYLE, NON_CAPTURE_STYLE, CHECK_STYLE, BROWN, WHITE
+from constants import ICONS, TILE_STYLE, CAPTURE_STYLE, NON_CAPTURE_STYLE, CHECK_STYLE, BLACK_PEN, BROWN_BRUSH, WHITE_BRUSH
 
 
 def numToPos(sq):
@@ -14,7 +14,7 @@ class Tile(QtWidgets.QPushButton):
         self.move = None
         self.tilePos = pos
         self.tileNum = (8 * pos[0]) + pos[1]
-        self.tileColor = WHITE if ((pos[0] + pos[1]) % 2 == 0) else BROWN
+        # self.tileColor = WHITE if ((pos[0] + pos[1]) % 2 == 0) else BROWN
         self.setFixedSize(QtCore.QSize(100, 100))
         self.setIconSize(QtCore.QSize(100, 100))
         self.setStyleSheet(TILE_STYLE.format(color = self.tileColor)) 
@@ -46,46 +46,51 @@ class Tile(QtWidgets.QPushButton):
         self.setStyleSheet(TILE_STYLE.format(color = self.tileColor)) 
 
 
+def isBrownTile(i, j):
+    return (i + j) % 2 == 0
 
 class Window(QtWidgets.QWidget): 
     def __init__(self):
         super().__init__()
 
-
-        self.tileLayout = QtWidgets.QGridLayout()
-        self.tileLayout.setVerticalSpacing(0)
-        self.tileLayout.setHorizontalSpacing(0)
- 
-        for i in range(0, 8):
-            for j in range(0, 8):
-                tile = Tile(self, (7 - i, 7 - j)) 
-                self.tileLayout.addWidget(tile, i, j) 
-
-        self.infoLayout = QtWidgets.QVBoxLayout()
-
-        self.mainLayout = QtWidgets.QHBoxLayout()
-        self.mainLayout.addLayout(self.tileLayout)
-        self.mainLayout.addLayout(self.infoLayout)
-
-        self.highlighted = []
-        self.selectedSquare = -1
-        self.setLayout(self.mainLayout)
-
-        self.undoShortcut = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Z"), self)
-        self.undoShortcut.activated.connect(self.undoLastMove)
-
-        self.printShortcut = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+P"), self)
-        self.printShortcut.activated.connect(self.printBoard)
-
         board.reset()
-        self.renderBoardState()
+        self.boardState = board.get_board_state()
 
+    def resizeEvent(self, event: QtGui.QResizeEvent):
+        super().resizeEvent(event)
+        windowSize: tuple[int] = event.size().toTuple()
+        self.windowWidth: int = windowSize[0]
+        self.windowHeight: int = windowSize[1]
+        self.length: int = min(windowSize)
+
+
+    def paintEvent(self, event: QtGui.QPaintEvent):
+        topLeftWidth: int = (self.windowWidth - self.length) // 2
+        topLeftHeight: int = (self.windowHeight - self.length) // 2
+        tileLength: int = self.length // 8
+        tileSize: QtCore.QSize = QtCore.QSize(tileLength, tileLength)
+
+        painter: QtGui.QPainter = QtGui.QPainter(self)
+        painter.setPen(BLACK_PEN)
+        index: int = 63
+        for j in range(0, 8):
+            for i in range(0, 8):
+                piece: Piece = self.boardState.piece(index)
+                tileTopLeft: QtCore.QPoint = QtCore.QPoint(topLeftWidth + i * tileLength, topLeftHeight + j * tileLength)
+                painter.setBrush(BROWN_BRUSH if isBrownTile(i, j) else WHITE_BRUSH)
+                tileRect: QtCore.QRect = QtCore.QRect(tileTopLeft, tileSize)
+                painter.drawRect(tileRect)
+                ICONS[piece].render(painter, tileRect)
+                index -= 1
+
+       
     def undoLastMove(self):
         board.undo_last_move()
         self.renderBoardState()
 
     def printBoard(self):
         print(board.layout())
+
 
     def renderBoardState(self):
         self.boardState = board.get_board_state()

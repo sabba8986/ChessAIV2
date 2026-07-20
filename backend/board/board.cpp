@@ -417,14 +417,8 @@ MoveList Board::get_legal_moves(int sq){
         }
         if((dest_mask & get_promotion_row(ally_color)) && ally_type == PieceType::PAWN){
             flags |= Move::promotion_flag;
-            legal_moves.add_move(Move(sq, dest, flags, PieceType::QUEEN));
-            legal_moves.add_move(Move(sq, dest, flags, PieceType::KNIGHT));
-            legal_moves.add_move(Move(sq, dest, flags, PieceType::ROOK));
-            legal_moves.add_move(Move(sq, dest, flags, PieceType::BISHOP));
         } 
-        else{
-            legal_moves.add_move(Move(sq, dest, flags));
-        }
+        legal_moves.add_move(Move(sq, dest, flags)); // undefined promotion type for promotion moves
         quiets_and_captures ^= (1ull << dest);
     }
     if(en_passant){

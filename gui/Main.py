@@ -1,13 +1,13 @@
 from window import Window
 import sys
 from PySide6 import QtWidgets
-from constants import initializeIcons
+from constants import initializePieceRenderers
 
 
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication([])
-    initializeIcons()
+    initializePieceRenderers()
     window = Window()
     window.setFixedSize(1000, 800)
     window.show()

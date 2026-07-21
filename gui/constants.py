@@ -1,14 +1,14 @@
-from PySide6.QtGui import QColor, QPen, QBrush
+from PySide6.QtGui import QColor, QPen, QBrush, QIcon
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtCore import Qt
 from pathlib import Path
-from board import Piece
+from board import Piece, PieceType
 
 
 iconsDir = (Path(__file__).resolve().parent.parent) / "assets" / "icons" / "pieces"
 
 
-PIECE_RENDERERS: list[QSvgRenderer | None] = [None] * 14
+PIECE_RENDERERS: list[QSvgRenderer] = [QSvgRenderer()] * 14
 
 
 def initializePieceRenderers():
@@ -27,7 +27,23 @@ def initializePieceRenderers():
     PIECE_RENDERERS[Piece.BLACK_KING] = QSvgRenderer(str(iconsDir / "black_king.svg"))
 
 
-TILE_PEN: QPen = QPen(QColor(0, 0, 0, 0.30))
+WHITE_PROMOTION_ICONS: list[tuple[PieceType, QIcon]] = [ \
+    (PieceType.QUEEN, QIcon(str(iconsDir / "white_queen.svg"))), \
+    (PieceType.KNIGHT, QIcon(str(iconsDir / "white_knight.svg"))), \
+    (PieceType.BISHOP, QIcon(str(iconsDir / "white_bishop.svg"))), \
+    (PieceType.ROOK, QIcon(str(iconsDir / "white_rook.svg"))) \
+]
+
+
+BLACK_PROMOTION_ICONS: list[tuple[PieceType, QIcon]] = [ \
+    (PieceType.QUEEN, QIcon(str(iconsDir / "black_queen.svg"))), \
+    (PieceType.KNIGHT, QIcon(str(iconsDir / "black_knight.svg"))), \
+    (PieceType.BISHOP, QIcon(str(iconsDir / "black_bishop.svg"))), \
+    (PieceType.ROOK, QIcon(str(iconsDir / "black_rook.svg"))) \
+]
+
+
+TILE_PEN: QPen = QPen(QColor(0, 0, 0, 10))
 SELECTED_PEN: QPen = QPen(QBrush(Qt.BrushStyle.SolidPattern), 2)
 HIGHLIGHTED_PEN = QPen(QColor(0))
 

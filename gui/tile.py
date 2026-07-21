@@ -10,7 +10,7 @@ def isWhiteTile(n):
 
 
 class Tile:
-    def __init__(self, tileNum: int, rect: QRect = None):
+    def __init__(self, tileNum: int, rect: QRect | None = None):
         self.brush: QBrush = WHITE_BRUSH if isWhiteTile(tileNum) else BROWN_BRUSH
-        self.rect: QRect = rect
-        self.move: Move = None
+        self.rect: QRect = QRect()
+        self.move: Move | None = None

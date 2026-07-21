@@ -39,6 +39,7 @@ PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
         .value("BLACK_KING", Piece::BLACK_KING)
         .finalize();
     py::class_<Move>(m, "Move")
+        .def(py::init<Move>())
         .def("src", &Move::src)
         .def("dest", &Move::dest)
         .def("is_capture", &Move::is_capture)
@@ -46,7 +47,8 @@ PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
         .def("is_castle", &Move::is_castle)
         .def("is_en_passant", &Move::is_en_passant)
         .def("is_promotion", &Move::is_promotion)
-        .def("promoted_type", &Move::promoted_type);
+        .def("promoted_type", &Move::promoted_type)
+        .def("set_promoted_type", &Move::set_promoted_type);
     py::class_<MoveList>(m, "MoveList")
         .def("size", &MoveList::size)
         .def("__getitem__", &MoveList::operator[]);
@@ -59,4 +61,5 @@ PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
     m.def("make_move", [](Move move){current_board.make_move(move);}, "Execute the specified move on the board");
     m.def("undo_last_move", [](){current_board.undo_last_move();}, "Undoes the last move on the board");
     m.def("layout", [](){return current_board.layout();}, "Gets the layout of the board as a prettified FEN string");
+    m.def("get_color", &get_color, "Returns the color of the specified piece");
 }

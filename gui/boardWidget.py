@@ -1,10 +1,11 @@
 from PySide6.QtWidgets import QWidget
-from PySide6.QtGui import QResizeEvent, QPaintEvent, QMouseEvent, QPainter, QPen, QBrush, QShortcut, QShortcutEvent
+from PySide6.QtGui import QResizeEvent, QPaintEvent, QMouseEvent, QPainter, QPen, QBrush, QShortcut
 from PySide6.QtCore import QPoint, QRect, QSize
 from tile import Tile
 from constants import TILE_PEN, SELECTED_PEN, HIGHLIGHTED_PEN, CAPTURE_BRUSH, NON_CAPTURE_BRUSH, PIECE_RENDERERS
 import board
-from board import Piece, BoardState, MoveList, Move
+from board import Piece, BoardState, MoveList, Move, Color, PieceType
+from promotionDialog import PromotionDialog
 
 
 
@@ -21,6 +22,9 @@ class BoardWidget(QWidget):
 
         self.printBoardShortcut = QShortcut("Ctrl+P", self)
         self.printBoardShortcut.activated.connect(self.printBoardCallback)
+
+        self.showDialogShortcut = QShortcut("Ctrl+L", self)
+        self.showDialogShortcut.activated.connect(lambda: print(PromotionDialog(Color.WHITE, self).exec()))
 
 
     def undoMoveCallback(self) -> None:
@@ -79,10 +83,6 @@ class BoardWidget(QWidget):
         return 63 - (8 * i + j)
 
 
-    def openPromotionDialog(self):
-        pass
-
-
     def updateBoardState(self) -> None:
         self.boardState = board.get_board_state()
         self.update()
@@ -90,16 +90,17 @@ class BoardWidget(QWidget):
     
     def mousePressEvent(self, event: QMouseEvent) -> None:
         newSq: int = self.getSelectedSq(event.pos())
-        selectedMove: Move = self.tiles[newSq].move
+        selectedMove: Move | None = self.tiles[newSq].move
         if self.selectedSq == newSq:
             return
         for tile in self.tiles:
             tile.move = None
         if selectedMove is not None:
             if selectedMove.is_promotion():
-                self.openPromotionDialog()
-            else:
-                board.make_move(selectedMove)
+                color: Color = board.get_color(self.boardState.piece(selectedMove.src()))
+                promotedType: PieceType = PieceType(PromotionDialog(color, self).exec())
+                selectedMove.set_promoted_type(promotedType)
+            board.make_move(selectedMove)
             self.selectedSq = None
         else:
             self.selectedSq = newSq

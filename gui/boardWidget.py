@@ -1,10 +1,10 @@
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QWidget, QDialog
 from PySide6.QtGui import QResizeEvent, QPaintEvent, QMouseEvent, QPainter, QPen, QBrush, QShortcut
 from PySide6.QtCore import QPoint, QRect, QSize
 from tile import Tile
-from constants import TILE_PEN, SELECTED_PEN, HIGHLIGHTED_PEN, CAPTURE_BRUSH, NON_CAPTURE_BRUSH, PIECE_RENDERERS
+from constants import TILE_PEN, SELECTED_PEN, HIGHLIGHTED_PEN, CAPTURE_BRUSH, NON_CAPTURE_BRUSH, CHECK_BRUSH, PIECE_RENDERERS
 import board
-from board import Piece, BoardState, MoveList, Move, Color, PieceType
+from board import Piece, PieceType, BoardState, MoveList, Move, Color, get_type, get_color
 from promotionDialog import PromotionDialog
 
 
@@ -22,9 +22,6 @@ class BoardWidget(QWidget):
 
         self.printBoardShortcut = QShortcut("Ctrl+P", self)
         self.printBoardShortcut.activated.connect(self.printBoardCallback)
-
-        self.showDialogShortcut = QShortcut("Ctrl+L", self)
-        self.showDialogShortcut.activated.connect(lambda: print(PromotionDialog(Color.WHITE, self).exec()))
 
 
     def undoMoveCallback(self) -> None:
@@ -58,7 +55,11 @@ class BoardWidget(QWidget):
         painter: QPainter = QPainter(self)
         for sq in range(0, 64):
             tile: Tile = self.tiles[sq]
-            self.paintTile(tile, self.boardState.piece(sq), painter, TILE_PEN, tile.brush)
+            piece: Piece = self.boardState.piece(sq)
+            if get_type(piece) == PieceType.KING and board.in_check(get_color(piece)):
+                self.paintTile(tile, piece, painter, SELECTED_PEN, CHECK_BRUSH)
+            else:
+                self.paintTile(tile, self.boardState.piece(sq), painter, TILE_PEN, tile.brush)
 
         if self.selectedSq is not None: 
             moveList: MoveList = self.boardState.move_list(self.selectedSq)
@@ -66,14 +67,14 @@ class BoardWidget(QWidget):
                 move: Move = moveList[i]
                 sq: int = move.dest()
                 tile: Tile = self.tiles[sq]
-                tile.move = move
+                tile.moves.append(move)
                 if move.is_capture() or move.is_en_passant():
                     self.paintTile(tile, self.boardState.piece(sq), painter, HIGHLIGHTED_PEN, CAPTURE_BRUSH)
                 else:
-                    self.paintTile(tile, self.boardState.piece (sq), painter, HIGHLIGHTED_PEN, NON_CAPTURE_BRUSH)
+                    self.paintTile(tile, self.boardState.piece(sq), painter, HIGHLIGHTED_PEN, NON_CAPTURE_BRUSH)
             # Paint selected tile last to prevent borders of highlighted squares from overriding the selected pen 
             selectedTile: Tile = self.tiles[self.selectedSq]
-            self.paintTile(selectedTile, self.boardState.piece(self.selectedSq), painter, SELECTED_PEN, selectedTile.brush)
+            self.paintTile(selectedTile, self.boardState.piece(self.selectedSq), painter, SELECTED_PEN, CHECK_BRUSH if get_type(self.boardState.piece(self.selectedSq)) == PieceType.KING else tile.brush)
 
 
     def getSelectedSq(self, point: QPoint) -> int:
@@ -90,25 +91,21 @@ class BoardWidget(QWidget):
     
     def mousePressEvent(self, event: QMouseEvent) -> None:
         newSq: int = self.getSelectedSq(event.pos())
-        selectedMove: Move | None = self.tiles[newSq].move
+        selectedMoves: list[Move] = self.tiles[newSq].moves
         if self.selectedSq == newSq:
             return
         for tile in self.tiles:
-            tile.move = None
-        if selectedMove is not None:
+            tile.moves = []
+        if len(selectedMoves) != 0:
+            selectedMove: Move = selectedMoves[0]
             if selectedMove.is_promotion():
-                color: Color = board.get_color(self.boardState.piece(selectedMove.src()))
-                promotedType: PieceType = PieceType(PromotionDialog(color, self).exec())
-                selectedMove.set_promoted_type(promotedType)
+                color: Color = Color.WHITE if self.boardState.piece(selectedMove.src()) == Piece.WHITE_PAWN else Piece.BLACK_PAWN
+                dialog: PromotionDialog = PromotionDialog(color, selectedMoves, self)
+                if dialog.exec() == QDialog.DialogCode.Accepted:
+                    selectedMove = dialog.getSelectedMove()
             board.make_move(selectedMove)
             self.selectedSq = None
         else:
             self.selectedSq = newSq
+        event.accept()
         self.updateBoardState()
-
-
-            
-        
-            
-
-        

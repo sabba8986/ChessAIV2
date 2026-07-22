@@ -408,6 +408,7 @@ MoveList Board::get_legal_moves(int sq){
     std::uint64_t enemies = all_pieces[enemy_idx];
     std::uint64_t en_passant = ((1ull << sq) & get_en_passant_row(ally_color)) ? bitboard_moves::pawn_en_passant(sq, ally_color, en_passant_sq) : 0;
     std::uint64_t castles = ally_type == PieceType::KING ? get_castle_moves(ally_color) : 0;
+    // keep in mind for future: if a pawn has one promotion move it can currently perform, then all of its moves must be promotions also
     while(quiets_and_captures){
         int dest = std::countr_zero(quiets_and_captures);
         std::uint64_t dest_mask = 1ull << dest;
@@ -417,8 +418,14 @@ MoveList Board::get_legal_moves(int sq){
         }
         if((dest_mask & get_promotion_row(ally_color)) && ally_type == PieceType::PAWN){
             flags |= Move::promotion_flag;
-        } 
-        legal_moves.add_move(Move(sq, dest, flags)); // undefined promotion type for promotion moves
+            legal_moves.add_move(Move(sq, dest, flags, PieceType::QUEEN));
+            legal_moves.add_move(Move(sq, dest, flags, PieceType::KNIGHT));
+            legal_moves.add_move(Move(sq, dest, flags, PieceType::BISHOP));
+            legal_moves.add_move(Move(sq, dest, flags, PieceType::ROOK));
+        }
+        else{
+            legal_moves.add_move(Move(sq, dest, flags));
+        }
         quiets_and_captures ^= (1ull << dest);
     }
     if(en_passant){

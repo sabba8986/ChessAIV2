@@ -1,49 +1,55 @@
-from PySide6.QtGui import QColor, QPen, QBrush, QIcon
-from PySide6.QtSvg import QSvgRenderer
-from PySide6.QtCore import Qt
 from pathlib import Path
-from board import Piece, PieceType
 
+from board import Piece
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QBrush, QColor, QIcon, QPen
+from PySide6.QtSvg import QSvgRenderer
 
 iconsDir = (Path(__file__).resolve().parent.parent) / "assets" / "icons" / "pieces"
 
 
+PIECE_PATHS: list[str] = [
+    "", 
+    str(iconsDir / "white_pawn.svg"),
+    str(iconsDir / "white_rook.svg"),
+    str(iconsDir / "white_knight.svg"), 
+    str(iconsDir / "white_bishop.svg"),
+    str(iconsDir / "white_queen.svg"),
+    str(iconsDir / "white_king.svg"), 
+    "", 
+    str(iconsDir / "black_pawn.svg"),
+    str(iconsDir / "black_rook.svg"),
+    str(iconsDir / "black_knight.svg"),
+    str(iconsDir / "black_bishop.svg"),
+    str(iconsDir / "black_queen.svg"),
+    str(iconsDir / "black_king.svg")
+]
+
+
 PIECE_RENDERERS: list[QSvgRenderer] = [QSvgRenderer()] * 14
-
-
 def initializePieceRenderers():
-    PIECE_RENDERERS[Piece.EMPTY] = QSvgRenderer()
-    PIECE_RENDERERS[Piece.WHITE_PAWN] = QSvgRenderer(str(iconsDir / "white_pawn.svg"))
-    PIECE_RENDERERS[Piece.WHITE_ROOK] = QSvgRenderer(str(iconsDir / "white_rook.svg"))
-    PIECE_RENDERERS[Piece.WHITE_KNIGHT] = QSvgRenderer(str(iconsDir / "white_knight.svg"))
-    PIECE_RENDERERS[Piece.WHITE_BISHOP] = QSvgRenderer(str(iconsDir / "white_bishop.svg"))
-    PIECE_RENDERERS[Piece.WHITE_QUEEN] = QSvgRenderer(str(iconsDir / "white_queen.svg"))
-    PIECE_RENDERERS[Piece.WHITE_KING] = QSvgRenderer(str(iconsDir / "white_king.svg"))
-    PIECE_RENDERERS[Piece.BLACK_PAWN] = QSvgRenderer(str(iconsDir / "black_pawn.svg"))
-    PIECE_RENDERERS[Piece.BLACK_ROOK] = QSvgRenderer(str(iconsDir / "black_rook.svg"))
-    PIECE_RENDERERS[Piece.BLACK_KNIGHT] = QSvgRenderer(str(iconsDir / "black_knight.svg"))
-    PIECE_RENDERERS[Piece.BLACK_BISHOP] = QSvgRenderer(str(iconsDir / "black_bishop.svg"))
-    PIECE_RENDERERS[Piece.BLACK_QUEEN] = QSvgRenderer(str(iconsDir / "black_queen.svg"))
-    PIECE_RENDERERS[Piece.BLACK_KING] = QSvgRenderer(str(iconsDir / "black_king.svg"))
+    for piece in Piece: 
+        if piece != Piece.EMPTY:
+            PIECE_RENDERERS[piece] = QSvgRenderer(PIECE_PATHS[piece])
 
 
 WHITE_PROMOTION_ICONS: list[QIcon] = [ \
     QIcon(), \
     QIcon(), \
-    QIcon(str(iconsDir / "white_rook.svg")), \
-    QIcon(str(iconsDir / "white_knight.svg")), \
-    QIcon(str(iconsDir / "white_bishop.svg")), \
-    QIcon(str(iconsDir / "white_queen.svg")) \
+    QIcon(PIECE_PATHS[Piece.WHITE_ROOK]), \
+    QIcon(PIECE_PATHS[Piece.WHITE_KNIGHT]), \
+    QIcon(PIECE_PATHS[Piece.WHITE_BISHOP]), \
+    QIcon(PIECE_PATHS[Piece.WHITE_QUEEN]) \
 ]
 
 
 BLACK_PROMOTION_ICONS: list[QIcon] = [ \
     QIcon(), \
     QIcon(), \
-    QIcon(str(iconsDir / "black_rook.svg")), \
-    QIcon(str(iconsDir / "black_knight.svg")), \
-    QIcon(str(iconsDir / "black_bishop.svg")), \
-    QIcon(str(iconsDir / "black_queen.svg")) \
+    QIcon(PIECE_PATHS[Piece.BLACK_ROOK]), \
+    QIcon(PIECE_PATHS[Piece.BLACK_KNIGHT]), \
+    QIcon(PIECE_PATHS[Piece.BLACK_BISHOP]), \
+    QIcon(PIECE_PATHS[Piece.BLACK_QUEEN]) \
 ]
 
 

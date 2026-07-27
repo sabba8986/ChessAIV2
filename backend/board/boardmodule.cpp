@@ -1,6 +1,7 @@
 #include "board.hpp"
 #include <pybind11/pybind11.h>
 #include <pybind11/native_enum.h>
+#include <pybind11/pytypes.h>
 
 namespace py = pybind11;
 
@@ -38,6 +39,15 @@ PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
         .value("BLACK_QUEEN", Piece::BLACK_QUEEN)
         .value("BLACK_KING", Piece::BLACK_KING)
         .finalize();
+    auto piece_enum = m.attr("Piece");
+    piece_enum.attr("color") = py::cpp_function(
+        [](Piece self){return get_color(self);}, 
+        py::is_method(piece_enum)
+    );
+    piece_enum.attr("type") = py::cpp_function(
+        [](Piece self){return get_type(self);}, 
+        py::is_method(piece_enum)
+    );
     py::class_<Move>(m, "Move")
         .def(py::init<Move>())
         .def("src", &Move::src)
@@ -61,6 +71,4 @@ PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
     m.def("undo_last_move", [](){current_board.undo_last_move();}, "Undoes the last move on the board");
     m.def("in_check", [](Color c){return current_board.in_check(c);}, "Returns whether the king of the specified color is in check");
     m.def("layout", [](){return current_board.layout();}, "Gets the layout of the board as a prettified FEN string");
-    m.def("get_color", &get_color, "Returns the color of the specified piece");
-    m.def("get_type", &get_type, "Returns the type of the specified piece");
 }

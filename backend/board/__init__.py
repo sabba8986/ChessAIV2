@@ -1,3 +1,16 @@
-from .board_interface import Color, PieceType, Piece, Move, MoveList, BoardState, reset, get_board_state, make_move, undo_last_move, layout
+from .board_interface import (
+    BoardState,
+    Color,
+    Move,
+    MoveList,
+    Piece,
+    PieceType,
+    get_board_state,
+    in_check,
+    layout,
+    make_move,
+    reset,
+    undo_last_move,
+)
 
-__all__ = ["reset", "get_board_state", "make_move", "Color", "PieceType", "Piece", "Move", "MoveList", "BoardState", "undo_last_move", "layout"]
+__all__ = ["BoardState", "Color", "Move", "MoveList", "Piece", "PieceType", "get_board_state", "in_check", "layout", "make_move", "reset", "undo_last_move"]

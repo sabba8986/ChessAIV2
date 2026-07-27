@@ -2,7 +2,6 @@
 #define MOVES
 #include "piece.hpp"
 #include <cstdint>
-#include <x86intrin.h>
 
 
 namespace bitboard_moves{

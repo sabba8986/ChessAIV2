@@ -27,6 +27,7 @@ public:
     bool is_en_passant();
     bool is_promotion();
     PieceType promoted_type();
+    void set_promoted_type(PieceType p);
     bool is_castle();
     bool is_quiet();
     bool is_capture();

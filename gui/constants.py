@@ -72,7 +72,6 @@ BLACK_PROMOTION_ICONS: list[QIcon] = [ \
 
 
 TILE_PEN: QPen = QPen(QColor(0, 0, 0, 10))
-SELECTED_PEN: QPen = QPen(QBrush(Qt.BrushStyle.SolidPattern), 2)
 HIGHLIGHTED_PEN = QPen(QColor(0))
 
 

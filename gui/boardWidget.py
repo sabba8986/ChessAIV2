@@ -3,7 +3,7 @@ from PySide6.QtGui import QResizeEvent, QPaintEvent, QMouseEvent, QPainter, QSho
 from PySide6.QtCore import QPoint, QRect, QSize, Qt
 from PySide6.QtSvg import QSvgRenderer
 from tile import Tile
-from constants import TILE_PEN, SELECTED_PEN, HIGHLIGHTED_PEN, CAPTURE_BRUSH, NON_CAPTURE_BRUSH, CHECK_BRUSH, PIECE_RENDERERS, cursorTileTopLeft
+from constants import TILE_PEN, HIGHLIGHTED_PEN, CAPTURE_BRUSH, NON_CAPTURE_BRUSH, CHECK_BRUSH, PIECE_RENDERERS, cursorTileTopLeft
 import board
 from board import Piece, PieceType, BoardState, MoveList, Move, Color
 from promotionDialog import PromotionDialog
@@ -91,22 +91,21 @@ class BoardWidget(QWidget):
                     painter.setBrush(CHECK_BRUSH)
                     painter.drawRect(tile.rect)
                 painter.drawPixmap(tile.topLeft, self.piecePixmaps[self.boardState.piece(sq)])  
-
         if self.selectedSq is not None:
             piece: Piece = self.boardState.piece(self.selectedSq)
             tile: Tile = self.tiles[self.selectedSq]
-            painter.setPen(SELECTED_PEN)
+            painter.setPen(TILE_PEN)
             if piece.type() == PieceType.KING and board.in_check(piece.color()):
                 painter.setBrush(CHECK_BRUSH)
             else:
                 painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawRect(tile.rect)
             if piece != Piece.EMPTY:
-                if not self.grabbed:
-                    painter.drawPixmap(tile.topLeft, self.piecePixmaps[piece])
-                else:
+                if self.grabbed:
                     topLeft: QPoint = cursorTileTopLeft(self.mapFromGlobal(QCursor.pos()), self.tileLength)
                     painter.drawPixmap(topLeft, self.piecePixmaps[piece])
+                else:
+                    painter.drawPixmap(tile.topLeft, self.piecePixmaps[piece])
         # end: float = time.perf_counter_ns()
         # print(f"Finished paintEvent in {(end - start)/1000000} ms")
 
@@ -117,13 +116,13 @@ class BoardWidget(QWidget):
         selectedMove: Move = tile.moves[0]
         #If a tile has more than one move, it means it is a promotion
         if len(tile.moves) > 1:
-            piece: Piece = self.boardState.piece(sq)
-            dialog: PromotionDialog = PromotionDialog(piece.color(), tile.moves, self)
+            pawnSq: int = selectedMove.src() # Promotion move must always have a pawn at the start (src) location
+            dialog: PromotionDialog = PromotionDialog(self.boardState.piece(pawnSq).color(), tile.moves, self)
             if dialog.exec() == QDialog.DialogCode.Accepted:
                 selectedMove = dialog.getSelectedMove()
         board.make_move(selectedMove)
         self.highlighted = 0
-        self.selectedSq = None
+        self.selectedSq = selectedMove.dest()
         self.boardState = board.get_board_state()
 
 
@@ -167,5 +166,5 @@ class BoardWidget(QWidget):
         sq: int = self.getSelectedSq(event.position().toPoint())
         if self.highlighted & (1 << sq):
             self.makeMove(sq)
-        self.update()
+        self.update() #Important to repaint instead of update, since with update Qt can delay the repaint until the mouse moves after promotion
 

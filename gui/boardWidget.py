@@ -1,13 +1,15 @@
 from PySide6.QtWidgets import QWidget, QDialog  # noqa: I001
 from PySide6.QtGui import QResizeEvent, QPaintEvent, QMouseEvent, QPainter, QShortcut, QPixmap, QImage, QColorConstants, QCursor
-from PySide6.QtCore import QPoint, QRect, QSize
+from PySide6.QtCore import QPoint, QRect, QSize, Qt
 from PySide6.QtSvg import QSvgRenderer
 from tile import Tile
-from constants import TILE_PEN, SELECTED_PEN, HIGHLIGHTED_PEN, CAPTURE_BRUSH, NON_CAPTURE_BRUSH, CHECK_BRUSH, PIECE_RENDERERS
+from constants import TILE_PEN, SELECTED_PEN, HIGHLIGHTED_PEN, CAPTURE_BRUSH, NON_CAPTURE_BRUSH, CHECK_BRUSH, PIECE_RENDERERS, cursorTileTopLeft
 import board
 from board import Piece, PieceType, BoardState, MoveList, Move, Color
 from promotionDialog import PromotionDialog
 import time
+
+
 
 
 class BoardWidget(QWidget):
@@ -15,8 +17,10 @@ class BoardWidget(QWidget):
         super().__init__(parent)
         board.reset()
         self.boardState: BoardState = board.get_board_state()
+        self.boardPixmap: QPixmap = QPixmap()
         self.piecePixmaps: list[QPixmap] = [QPixmap()] * 14
         self.tileLength: int = 0
+        self.length: int = 0
         self.selectedSq: int | None = None
         self.grabbed: bool = False
         self.highlighted: int = 0
@@ -38,64 +42,68 @@ class BoardWidget(QWidget):
     def printBoardCallback(self) -> None:
         print(board.layout())
 
-    
+
     def resizeEvent(self, event: QResizeEvent) -> None:
-        self.length: int = event.size().width() # event.size() returns the new size of the boardWidget, which will only ever be square, so obtaining only one dimension is sufficient
-        self.tileLength: int = self.length // 8
-        tileSize = QSize(self.tileLength, self.tileLength)
-        for i in range(8):
-            for j in range(8):
-                tileNum: int = 63 - (8 * i + j)
-                tileTopLeft: QPoint = QPoint(j * self.tileLength, i * self.tileLength)
-                self.tiles[tileNum].rect = QRect(tileTopLeft, tileSize)
+        boardSize: QSize = event.size()
+        tileLength: int = boardSize.width() // 8 # event.size() returns the new size of the boardWidget, which will only ever be square, so obtaining only one dimension is sufficient
+        tileSize: QSize = QSize(tileLength, tileLength)
+        boardImage: QImage = QImage(boardSize, QImage.Format.Format_RGB32)
+        boardPainter: QPainter = QPainter(boardImage)
+        boardPainter.setPen(TILE_PEN)
+        for tile in self.tiles:
+            tile.resize(tileLength)
+            boardPainter.setBrush(tile.brush)
+            boardPainter.drawRect(tile.rect)
+        self.boardPixmap = QPixmap.fromImage(boardImage)
         for piece in Piece:
             renderer: QSvgRenderer = PIECE_RENDERERS[piece]
             pieceImage: QImage = QImage(tileSize, QImage.Format.Format_ARGB32)
             pieceImage.fill(QColorConstants.Transparent)
             renderer.render(QPainter(pieceImage))
             self.piecePixmaps[piece] = QPixmap.fromImage(pieceImage)
+        self.tileLength = tileLength
+        self.length = boardSize.width()
 
     
     def paintEvent(self, event: QPaintEvent) -> None:
+        # start: float = time.perf_counter_ns()
         painter: QPainter = QPainter(self)
+        # Overlay board pixmap
+        painter.drawPixmap(QPoint(0, 0), self.boardPixmap)
         for sq in range(64):
             if sq == self.selectedSq:
                 continue
+            piece: Piece = self.boardState.piece(sq)
             tile: Tile = self.tiles[sq]
             if (1 << sq) & self.highlighted:
                 move: Move = tile.moves[0]                
                 painter.setPen(HIGHLIGHTED_PEN)
                 painter.setBrush(CAPTURE_BRUSH if move.is_capture() or move.is_en_passant() else NON_CAPTURE_BRUSH)
-            else:
-                piece: Piece = self.boardState.piece(sq)
-                painter.setPen(TILE_PEN)
+                painter.drawRect(tile.rect)
+            if piece != Piece.EMPTY:
                 if piece.type() == PieceType.KING and board.in_check(piece.color()):
+                    painter.setPen(TILE_PEN)
                     painter.setBrush(CHECK_BRUSH)
-                else:
-                    painter.setBrush(tile.brush)
-            painter.drawRect(tile.rect)
-            painter.drawPixmap(tile.rect.topLeft(), self.piecePixmaps[self.boardState.piece(sq)])  
+                    painter.drawRect(tile.rect)
+                painter.drawPixmap(tile.topLeft, self.piecePixmaps[self.boardState.piece(sq)])  
 
         if self.selectedSq is not None:
             piece: Piece = self.boardState.piece(self.selectedSq)
             tile: Tile = self.tiles[self.selectedSq]
             painter.setPen(SELECTED_PEN)
-            painter.setBrush(tile.brush)
+            if piece.type() == PieceType.KING and board.in_check(piece.color()):
+                painter.setBrush(CHECK_BRUSH)
+            else:
+                painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawRect(tile.rect)
             if piece != Piece.EMPTY:
-                if self.grabbed:
-                    topLeft: QPoint = self.mapFromGlobal(QCursor.pos()) - QPoint(self.tileLength // 2, self.tileLength // 2)
-                    painter.drawPixmap(topLeft, self.piecePixmaps[piece])
+                if not self.grabbed:
+                    painter.drawPixmap(tile.topLeft, self.piecePixmaps[piece])
                 else:
-                    painter.drawPixmap(tile.rect.topLeft(), self.piecePixmaps[piece])
-
-
-
-    def getSelectedSq(self, point: QPoint) -> int:
-        # Do not use QPoint scalar division operator, rounds up or down instead of flooring result
-        j: int = (point.x() * 8) // self.length
-        i: int = (point.y() * 8) // self.length
-        return 63 - (8 * i + j)
+                    topLeft: QPoint = cursorTileTopLeft(self.mapFromGlobal(QCursor.pos()), self.tileLength)
+                    painter.drawPixmap(topLeft, self.piecePixmaps[piece])
+        # end: float = time.perf_counter_ns()
+        # print(f"Finished paintEvent in {(end - start)/1000000} ms")
 
 
     def makeMove(self, sq: int) -> None:
@@ -112,6 +120,13 @@ class BoardWidget(QWidget):
         self.highlighted = 0
         self.selectedSq = None
         self.boardState = board.get_board_state()
+
+
+    def getSelectedSq(self, point: QPoint) -> int:
+        # Do not use QPoint scalar division operator, rounds up or down instead of flooring result
+        j: int = (point.x() * 8) // self.length
+        i: int = (point.y() * 8) // self.length
+        return 63 - (8 * i + j)
 
 
     def mousePressEvent(self, event: QMouseEvent) -> None:

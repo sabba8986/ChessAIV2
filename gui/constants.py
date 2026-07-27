@@ -1,11 +1,29 @@
 from pathlib import Path
 
 from board import Piece
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QBrush, QColor, QIcon, QPen
 from PySide6.QtSvg import QSvgRenderer
 
 iconsDir = (Path(__file__).resolve().parent.parent) / "assets" / "icons" / "pieces"
+
+
+def isWhite(sq: int):
+    row: int = sq // 8
+    return (sq % 2 == 0) if (row % 2 == 0) else (sq % 2 != 0)
+
+
+def toPos(sq: int) -> tuple[int, int]:
+    return ((63 - sq) % 8, (63 - sq) // 8)
+
+
+def topLeft(sq: int, tileLength: int) -> QPoint:
+    tup: tuple[int, int] = toPos(sq)
+    return QPoint(tileLength * tup[0], tileLength * tup[1])
+
+
+def cursorTileTopLeft(point: QPoint, tileLength: int) -> QPoint:
+    return point - QPoint(tileLength // 2, tileLength // 2)
 
 
 PIECE_PATHS: list[str] = [

@@ -17,8 +17,3 @@ class Window(QtWidgets.QWidget):
         topLeftX: int = (windowWidth - boardLength) // 2
         topLeftY: int = (windowHeight - boardLength) // 2
         self.boardWidget.setGeometry(topLeftX, topLeftY, boardLength, boardLength)
-
-    
-
-
-

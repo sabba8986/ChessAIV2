@@ -1,16 +1,17 @@
-from PySide6.QtGui import QBrush
-from PySide6.QtCore import QRect
-from constants import WHITE_BRUSH, BROWN_BRUSH
 from board import Move
-
-
-def isWhiteTile(n):
-    row: int = n // 8
-    return (n % 2 == 0) if (row % 2 == 0) else (n % 2 != 0)
+from constants import BROWN_BRUSH, WHITE_BRUSH, isWhite, topLeft
+from PySide6.QtCore import QPoint, QRect, QSize
+from PySide6.QtGui import QBrush
 
 
 class Tile:
-    def __init__(self, tileNum: int, rect: QRect | None = None):
-        self.brush: QBrush = WHITE_BRUSH if isWhiteTile(tileNum) else BROWN_BRUSH
-        self.rect: QRect = QRect()
+    def __init__(self, sq: int):
+        self.sq = sq
+        self.brush: QBrush = WHITE_BRUSH if isWhite(sq) else BROWN_BRUSH
+        self.topLeft: QPoint = QPoint(topLeft(sq, 0))
+        self.rect: QRect = QRect(self.topLeft, QSize(0, 0))
         self.moves: list[Move] = []
+
+    def resize(self, tileLength: int):
+        self.topLeft = QPoint(topLeft(self.sq, tileLength))
+        self.rect = QRect(self.topLeft, QSize(tileLength, tileLength))

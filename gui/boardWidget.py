@@ -44,10 +44,14 @@ class BoardWidget(QWidget):
 
 
     def resizeEvent(self, event: QResizeEvent) -> None:
+        # Throughout pixmap painting, adjust for device DPI ratio to prevent rescaling
+        dpr: float = self.devicePixelRatioF()
         boardSize: QSize = event.size()
-        tileLength: int = boardSize.width() // 8 # event.size() returns the new size of the boardWidget, which will only ever be square, so obtaining only one dimension is sufficient
+         # event.size() returns the new size of the boardWidget, which will only ever be square, so obtaining only one dimension is sufficient
+        tileLength: int = boardSize.width() // 8
         tileSize: QSize = QSize(tileLength, tileLength)
-        boardImage: QImage = QImage(boardSize, QImage.Format.Format_RGB32)
+        boardImage: QImage = QImage(boardSize * dpr, QImage.Format.Format_RGB32)
+        boardImage.setDevicePixelRatio(dpr)
         boardPainter: QPainter = QPainter(boardImage)
         boardPainter.setPen(TILE_PEN)
         for tile in self.tiles:
@@ -55,9 +59,10 @@ class BoardWidget(QWidget):
             boardPainter.setBrush(tile.brush)
             boardPainter.drawRect(tile.rect)
         self.boardPixmap = QPixmap.fromImage(boardImage)
+        boardPainter.end()
         for piece in Piece:
             renderer: QSvgRenderer = PIECE_RENDERERS[piece]
-            pieceImage: QImage = QImage(tileSize, QImage.Format.Format_ARGB32)
+            pieceImage: QImage = QImage(tileSize * dpr, QImage.Format.Format_ARGB32)
             pieceImage.fill(QColorConstants.Transparent)
             renderer.render(QPainter(pieceImage))
             self.piecePixmaps[piece] = QPixmap.fromImage(pieceImage)

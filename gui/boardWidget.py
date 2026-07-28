@@ -86,7 +86,7 @@ class BoardWidget(QWidget):
             if (1 << sq) & self.highlighted:
                 move: Move = tile.moves[0]                
                 painter.setPen(HIGHLIGHTED_PEN)
-                painter.setBrush(CAPTURE_BRUSH if move.is_capture() or move.is_en_passant() else NON_CAPTURE_BRUSH)
+                painter.setBrush(CAPTURE_BRUSH if move.is_capture() else NON_CAPTURE_BRUSH)
                 painter.drawRect(tile.rect)
             if piece != Piece.EMPTY:
                 if piece.type() == PieceType.KING and board.in_check(piece.color()):

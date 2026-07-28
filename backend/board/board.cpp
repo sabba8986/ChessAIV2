@@ -417,7 +417,7 @@ MoveList Board::get_legal_moves(int sq){
     while(quiets_and_captures){
         int dest = std::countr_zero(quiets_and_captures);
         std::uint64_t dest_mask = 1ull << dest;
-        std::uint16_t flags = 0;
+        Move::MoveFlag flags = Move::empty_flag;
         if(dest_mask & enemies){
             flags |= Move::capture_flag;
         }
@@ -434,7 +434,7 @@ MoveList Board::get_legal_moves(int sq){
         quiets_and_captures ^= (1ull << dest);
     }
     if(en_passant){
-        legal_moves.add_move(Move(sq, en_passant_sq, Move::en_passant_flag));
+        legal_moves.add_move(Move(sq, en_passant_sq, Move::en_passant_flag | Move::capture_flag));
     }
     while(castles){
         int dest = std::countr_zero(castles);
@@ -546,11 +546,10 @@ void Board::populate_perft(int depth, PerftResults& stats){
                 if(move.is_capture()){
                     stats.captures++;
                 }
-                else if(move.is_en_passant()){
-                    stats.captures++;
+                if(move.is_en_passant()){
                     stats.en_passants++;
                 }
-                else if(move.is_castle()){
+                if(move.is_castle()){
                     stats.castles++;
                 }
                 if(turn_color_in_check()){

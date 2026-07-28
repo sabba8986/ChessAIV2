@@ -32,13 +32,6 @@ PieceType Move::promoted_type(){
 }
 
 
-void Move::set_promoted_type(PieceType p){
-    assert(((p == PieceType::QUEEN) | (p == PieceType::KNIGHT) | (p == PieceType::BISHOP) | (p == PieceType::ROOK)) && "Must be a valid PieceType");
-    move &= ~promotion_mask;
-    move |= (static_cast<std::uint16_t>(p) - 2) << 14;
-}
-
-
 bool Move::is_castle(){
     return (move & castle_flag) && !is_promotion();
 }

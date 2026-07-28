@@ -60,6 +60,7 @@ public:
 
     std::string layout() const;
     void assert_valid() const;
+    unsigned long perft_cnt(int depth);
     friend struct BoardState;
 };
 

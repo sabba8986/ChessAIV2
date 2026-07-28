@@ -519,6 +519,22 @@ void Board::assert_valid() const{
 }
 
 
+unsigned long Board::perft_cnt(int depth){
+    if(depth == 0){
+        return 1;
+    }
+    unsigned long cnt = 0;
+    for(int sq = 0; sq < 64; sq++){
+        MoveList move_list = get_legal_moves(sq);
+        for(int i = 0; i < move_list.size(); i++){
+            Move move = move_list[i];
+            make_move(move);
+            cnt += perft_cnt(depth - 1);
+            undo_last_move();
+        }
+    }
+    return cnt;
+}
 
 void Board::reset(){
     using namespace defaults;

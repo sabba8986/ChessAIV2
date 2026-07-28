@@ -7,7 +7,7 @@
 // This Move struct stores bits for whether the move is a promotion, capture/quiet, en passant, or castle
 // If the move type is a promotion (i.e. promotion bit is ON), then the en passant and castle bits (2 MSB) are meaningless and instead are used to store the promoted type
 // Thus, to check if a move is an en passant or a castle, make sure the move is not a promotion beforehand
-// In addition Calling `promoted_type` on a Move that is not a promotion results in undefined behavior
+// In addition, calling `promoted_type` on a Move that is not a promotion results in undefined behavior
 struct Move{
 private:
     static constexpr std::uint16_t src_mask = 63;

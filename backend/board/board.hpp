@@ -9,6 +9,7 @@
 #include <array>
 #include <stack>
 #include "board_state.hpp"
+#include "perft_results.hpp"
 
 
 class Board{
@@ -55,12 +56,13 @@ public:
     void make_move(Move move);
     void undo_last_move();
     bool in_check(Color c);
+    bool turn_color_in_check();
     void reset();
     BoardState get_board_state();
 
     std::string layout() const;
     void assert_valid() const;
-    unsigned long perft_cnt(int depth);
+    void populate_perft(int depth, PerftResults& stats);
     friend struct BoardState;
 };
 

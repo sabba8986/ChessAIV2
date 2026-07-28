@@ -3,9 +3,13 @@
 #include "move.hpp"
 #include "bitboard_moves.hpp"
 #include "undo_move.hpp"
+#include "perft_results.hpp"
 #include <bit>
 #include <utility>
 #include <cassert>
+#include <iostream>
+
+
 
 Board::Board(){
     reset();
@@ -119,6 +123,7 @@ void Board::make_move(Move move){
     turn = other_color(turn);
     recalculate_all_pieces();
     assert_valid();
+    assert(!in_check(other_color(turn)) && "Cannot leave ally king in check after ally move");
 }
 
 
@@ -364,7 +369,7 @@ std::uint64_t Board::get_castle_moves(Color c){
     if(get_checkers(c) != 0) return moves;
     std::uint64_t occ = all_pieces[to_int(Color::WHITE)] | all_pieces[to_int(Color::BLACK)];
     if(c == Color::WHITE){
-        constexpr std::uint64_t white_left_castle_mask = (1ull << 4) | (1ull << 5) & (1ull << 6);
+        constexpr std::uint64_t white_left_castle_mask = (1ull << 4) | (1ull << 5) | (1ull << 6);
         constexpr std::uint64_t white_right_castle_mask = (1ull << 1) | (1ull << 2);
         if((castle_rights & white_left_castle_allowed_flag) && !(occ & white_left_castle_mask) && !get_attackers(4, Color::BLACK) && !get_attackers(5, Color::BLACK)){
             moves |= (1ull << 7);
@@ -406,7 +411,7 @@ MoveList Board::get_legal_moves(int sq){
     int enemy_idx = to_int(other_color(ally_color));
     std::uint64_t quiets_and_captures = get_legal_quiets_and_captures(sq);
     std::uint64_t enemies = all_pieces[enemy_idx];
-    std::uint64_t en_passant = ((1ull << sq) & get_en_passant_row(ally_color)) ? bitboard_moves::pawn_en_passant(sq, ally_color, en_passant_sq) : 0;
+    std::uint64_t en_passant = (get_type(piece) == PieceType::PAWN && ((1ull << sq) & get_en_passant_row(ally_color))) ? bitboard_moves::pawn_en_passant(sq, ally_color, en_passant_sq) : 0;
     std::uint64_t castles = ally_type == PieceType::KING ? get_castle_moves(ally_color) : 0;
     // keep in mind for future: if a pawn has one promotion move it can currently perform, then all of its moves must be promotions also
     while(quiets_and_captures){
@@ -444,6 +449,10 @@ bool Board::in_check(Color c){
     return get_checkers(c) != 0;
 }
 
+
+bool Board::turn_color_in_check(){
+    return in_check(turn);
+}
 
 std::string Board::layout() const{
     std::string layout;
@@ -519,22 +528,43 @@ void Board::assert_valid() const{
 }
 
 
-unsigned long Board::perft_cnt(int depth){
+void Board::populate_perft(int depth, PerftResults& stats){
     if(depth == 0){
-        return 1;
+        stats.nodes = 1;
+        return;
     }
-    unsigned long cnt = 0;
     for(int sq = 0; sq < 64; sq++){
         MoveList move_list = get_legal_moves(sq);
         for(int i = 0; i < move_list.size(); i++){
             Move move = move_list[i];
             make_move(move);
-            cnt += perft_cnt(depth - 1);
+            if(depth == 1){
+                stats.nodes++;
+                if(move.is_promotion()){
+                    stats.promotions++;
+                }
+                if(move.is_capture()){
+                    stats.captures++;
+                }
+                else if(move.is_en_passant()){
+                    stats.captures++;
+                    stats.en_passants++;
+                }
+                else if(move.is_castle()){
+                    stats.castles++;
+                }
+                if(turn_color_in_check()){
+                    stats.checks++;
+                }
+            } 
+            else{
+                populate_perft(depth - 1, stats);
+            }
             undo_last_move();
         }
     }
-    return cnt;
 }
+
 
 void Board::reset(){
     using namespace defaults;

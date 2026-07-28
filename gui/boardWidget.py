@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QWidget, QDialog  # noqa: I001
 from PySide6.QtGui import QResizeEvent, QPaintEvent, QMouseEvent, QPainter, QShortcut, QPixmap, QImage, QColorConstants, QCursor
-from PySide6.QtCore import QPoint, QRect, QSize, Qt
+from PySide6.QtCore import QPoint, QRect, QRectF, QSize, Qt
 from PySide6.QtSvg import QSvgRenderer
 from tile import Tile
 from constants import TILE_PEN, HIGHLIGHTED_PEN, CAPTURE_BRUSH, NON_CAPTURE_BRUSH, CHECK_BRUSH, PIECE_RENDERERS, cursorTileTopLeft
@@ -35,6 +35,8 @@ class BoardWidget(QWidget):
 
     def undoMoveCallback(self) -> None:
         board.undo_last_move()
+        self.highlighted = 0
+        self.selectedSq = None
         self.boardState = board.get_board_state()
         self.update()
 
@@ -62,9 +64,10 @@ class BoardWidget(QWidget):
         boardPainter.end()
         for piece in Piece:
             renderer: QSvgRenderer = PIECE_RENDERERS[piece]
-            pieceImage: QImage = QImage(tileSize * dpr, QImage.Format.Format_ARGB32)
+            pieceImage: QImage = QImage(tileSize * dpr, QImage.Format.Format_ARGB32_Premultiplied)
+            pieceImage.setDevicePixelRatio(dpr)
             pieceImage.fill(QColorConstants.Transparent)
-            renderer.render(QPainter(pieceImage))
+            renderer.render(QPainter(pieceImage), QRectF(0, 0, tileLength, tileLength))
             self.piecePixmaps[piece] = QPixmap.fromImage(pieceImage)
         self.tileLength = tileLength
         self.length = boardSize.width()

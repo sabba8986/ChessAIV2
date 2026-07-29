@@ -16,24 +16,24 @@ Board::Board(){
 
 
 int Board::get_king_pos(Color c) const{
-    return c == Color::WHITE ? std::countr_zero(bitboards[to_int(Piece::WHITE_KING)]) : 
-                               std::countr_zero(bitboards[to_int(Piece::BLACK_KING)]);
+    return c == Color::WHITE ? std::countr_zero(bitboards[Piece::WHITE_KING]) : 
+                               std::countr_zero(bitboards[Piece::BLACK_KING]);
 }
 
 
 void Board::do_castle(int src, int dest){
     Color castler_color = get_color(pieces[src]);
-    int rook_idx = to_int(to_piece(castler_color, PieceType::ROOK));
-    int king_idx = to_int(to_piece(castler_color, PieceType::KING));
+    Piece rook = to_piece(castler_color, PieceType::ROOK);
+    Piece king = to_piece(castler_color, PieceType::KING);
     if(src < dest){
-        bitboards[king_idx] <<= 2;
-        bitboards[rook_idx] ^= ((1ull << dest) | (1ull << (src + 1)));
+        bitboards[king] <<= 2;
+        bitboards[rook] ^= ((1ull << dest) | (1ull << (src + 1)));
         pieces[src + 2] = pieces[src];
         pieces[src + 1] = pieces[dest];
     }
     else{
-        bitboards[king_idx] >>= 2;
-        bitboards[rook_idx] ^= ((1ull << dest) | (1ull << (src - 1)));
+        bitboards[king] >>= 2;
+        bitboards[rook] ^= ((1ull << dest) | (1ull << (src - 1)));
         pieces[src - 2] = pieces[src];
         pieces[src - 1] = pieces[dest];
     }
@@ -49,10 +49,10 @@ void Board::move_piece(int src, int dest){
     const Piece captured = pieces[dest];
     std::uint64_t dest_mask = 1ull << dest;
     std::uint64_t move_mask = (1ull << src) | dest_mask;
-    bitboards[to_int(attacker)] ^= move_mask;
+    bitboards[attacker] ^= move_mask;
     pieces[src] = Piece::EMPTY;
     if(captured != Piece::EMPTY){
-        bitboards[to_int(captured)] ^= dest_mask;
+        bitboards[captured] ^= dest_mask;
     }
     pieces[dest] = attacker;
     Color attacker_color = get_color(attacker);
@@ -74,21 +74,19 @@ void Board::move_piece(int src, int dest){
 
 void Board::promote(int sq, PieceType p){
     std::uint64_t pos = 1ull << sq;
-    Color c = get_color(pieces[sq]);
-    Piece promoted_piece = to_piece(c, p);
-    int pawn_idx = to_int(pieces[sq]);
-    int promoted_idx = to_int(promoted_piece);
-    bitboards[pawn_idx] ^= pos;
-    bitboards[promoted_idx] ^= pos;
+    Piece pawn = pieces[sq];
+    Piece promoted_piece = to_piece(get_color(pawn), p);
+    bitboards[pawn] ^= pos;
+    bitboards[promoted_piece] ^= pos;
     pieces[sq] = promoted_piece;
 }
 
 
 void Board::do_en_passant(int en_passant_sq){
     Color enemy_color = other_color(turn);
-    int pawn_idx = to_int(to_piece(enemy_color, PieceType::PAWN));
+    Piece pawn = to_piece(enemy_color, PieceType::PAWN);
     int captured_piece_sq = turn == Color::WHITE ? en_passant_sq - 8 : en_passant_sq + 8;
-    bitboards[pawn_idx] ^= (1ull << captured_piece_sq);
+    bitboards[pawn] ^= (1ull << captured_piece_sq);
     pieces[captured_piece_sq] = Piece::EMPTY;
 }
 
@@ -132,52 +130,43 @@ void Board::recalculate_all_pieces(){
     for(Color c: colors){
         std::uint64_t all_pieces_bitboard = 0;
         for(PieceType p: types){
-            all_pieces_bitboard |= bitboards[to_int(to_piece(c, p))];
+            all_pieces_bitboard |= bitboards[to_piece(c, p)];
         }
-        all_pieces[to_int(c)] = all_pieces_bitboard;
+        all_pieces[c] = all_pieces_bitboard;
     }
 }
 
 
 std::uint64_t Board::get_attackers(int sq, Color attacker_color) const{
     Color ally_color = other_color(attacker_color);
-    std::uint64_t allies = all_pieces[to_int(ally_color)];
-    std::uint64_t enemies = all_pieces[to_int(attacker_color)];
-    std::uint64_t enemy_knights = bitboards[to_int(to_piece(attacker_color, PieceType::KNIGHT))];
-    std::uint64_t enemy_rooks = bitboards[to_int(to_piece(attacker_color, PieceType::ROOK))];
-    std::uint64_t enemy_bishops = bitboards[to_int(to_piece(attacker_color, PieceType::BISHOP))];
-    std::uint64_t enemy_queen = bitboards[to_int(to_piece(attacker_color, PieceType::QUEEN))];
-    std::uint64_t enemy_pawns = bitboards[to_int(to_piece(attacker_color, PieceType::PAWN))];
-    std::uint64_t enemy_king = bitboards[to_int(to_piece(attacker_color, PieceType::KING))];
+    std::uint64_t allies = all_pieces[ally_color];
+    std::uint64_t enemies = all_pieces[attacker_color];
+    std::uint64_t enemy_queen = bitboards[to_piece(attacker_color, PieceType::QUEEN)];
     return 
-        (bitboard_moves::knight(sq, allies, enemies) & enemy_knights) | 
-        (bitboard_moves::bishop(sq, allies, enemies) & (enemy_bishops | enemy_queen)) | 
-        (bitboard_moves::rook(sq, allies, enemies) & (enemy_rooks | enemy_queen)) | 
-        (bitboard_moves::pawn_captures(sq, ally_color, enemies) & enemy_pawns) |
-        (bitboard_moves::king(sq, allies, enemies) & enemy_king);
+        (bitboard_moves::knight(sq, allies, enemies) & bitboards[to_piece(attacker_color, PieceType::KNIGHT)]) | 
+        (bitboard_moves::bishop(sq, allies, enemies) & (bitboards[to_piece(attacker_color, PieceType::BISHOP)] | enemy_queen)) | 
+        (bitboard_moves::rook(sq, allies, enemies) & (bitboards[to_piece(attacker_color, PieceType::ROOK)] | enemy_queen)) | 
+        (bitboard_moves::pawn_captures(sq, ally_color, enemies) & bitboards[to_piece(attacker_color, PieceType::PAWN)]) |
+        (bitboard_moves::king(sq, allies, enemies) & bitboards[to_piece(attacker_color, PieceType::KING)]);
 }
 
 
 void Board::undo_castle(int src, int dest){
     if(src < dest){
         Color castler_color = get_color(pieces[src + 1]);
-        int rook_idx = to_int(to_piece(castler_color, PieceType::ROOK));
-        int king_idx = to_int(to_piece(castler_color, PieceType::KING));
         pieces[src] = pieces[src + 2];
         pieces[dest] = pieces[src + 1];
-        bitboards[king_idx] >>= 2;
-        bitboards[rook_idx] ^= ((1ull << dest) | (1ull << (src + 1)));
+        bitboards[to_piece(castler_color, PieceType::KING)] >>= 2;
+        bitboards[to_piece(castler_color, PieceType::ROOK)] ^= ((1ull << dest) | (1ull << (src + 1)));
         pieces[src + 2] = Piece::EMPTY;
         pieces[src + 1] = Piece::EMPTY;
     }
     else{
         Color castler_color = get_color(pieces[src - 1]);
-        int rook_idx = to_int(to_piece(castler_color, PieceType::ROOK));
-        int king_idx = to_int(to_piece(castler_color, PieceType::KING));
         pieces[src] = pieces[src - 2];
         pieces[dest] = pieces[src - 1];
-        bitboards[king_idx] <<= 2;
-        bitboards[rook_idx] ^= ((1ull << dest) | (1ull << (src - 1)));
+        bitboards[to_piece(castler_color, PieceType::KING)] <<= 2;
+        bitboards[to_piece(castler_color, PieceType::ROOK)] ^= ((1ull << dest) | (1ull << (src - 1)));
         pieces[src - 2] = Piece::EMPTY;
         pieces[src - 1] = Piece::EMPTY;
     }
@@ -189,12 +178,11 @@ void Board::undo_move_piece(int src, int dest, PieceType captured_piece_type){
     Color enemy_color = other_color(get_color(attacker));
     std::uint64_t dest_mask = 1ull << dest;
     std::uint64_t move_mask = (1ull << src) | dest_mask;
-    bitboards[to_int(attacker)] ^= move_mask;
+    bitboards[attacker] ^= move_mask;
     pieces[src] = pieces[dest];
     pieces[dest] = Piece::EMPTY;
     if(captured_piece_type != PieceType::EMPTY){
-        int captured_idx = to_int(to_piece(enemy_color, captured_piece_type));
-        bitboards[captured_idx] |= dest_mask;
+        bitboards[to_piece(enemy_color, captured_piece_type)] |= dest_mask;
         pieces[dest] = to_piece(enemy_color, captured_piece_type);
     }
 }
@@ -202,13 +190,11 @@ void Board::undo_move_piece(int src, int dest, PieceType captured_piece_type){
 
 void Board::undo_promote(int sq){
     Piece promoted_piece = pieces[sq];
-    Piece pawn_piece = to_piece(get_color(promoted_piece), PieceType::PAWN);
-    int pawn_idx = to_int(pawn_piece);
-    int promoted_idx = to_int(promoted_piece);
+    Piece pawn = to_piece(get_color(promoted_piece), PieceType::PAWN);
     std::uint64_t pos = 1ull << sq;
-    bitboards[pawn_idx] ^= pos;
-    bitboards[promoted_idx] ^= pos;
-    pieces[sq] = pawn_piece;
+    bitboards[pawn] ^= pos;
+    bitboards[promoted_piece] ^= pos;
+    pieces[sq] = pawn;
 }
 
 
@@ -216,7 +202,7 @@ void Board::undo_en_passant(int en_passant_sq){
     Color enemy_color = other_color(turn);
     Piece captured_piece = to_piece(turn, PieceType::PAWN);
     int captured_piece_sq = turn == Color::WHITE ? en_passant_sq + 8 : en_passant_sq - 8;
-    bitboards[to_int(captured_piece)] ^= (1ull << captured_piece_sq);
+    bitboards[captured_piece] ^= (1ull << captured_piece_sq);
     pieces[captured_piece_sq] = captured_piece;
 }
 
@@ -258,10 +244,8 @@ std::uint64_t Board::get_checkers(Color c) const{
 std::uint64_t Board::get_quiets_and_captures(int sq) const{
     Piece piece = pieces[sq];
     Color ally_color = get_color(piece);
-    int ally_idx = to_int(ally_color);
-    int enemy_idx = to_int(other_color(ally_color));
-    std::uint64_t allies = all_pieces[ally_idx];
-    std::uint64_t enemies = all_pieces[enemy_idx];
+    std::uint64_t allies = all_pieces[ally_color];
+    std::uint64_t enemies = all_pieces[other_color(ally_color)];
     switch(get_type(piece)){
         case PieceType::ROOK: return bitboard_moves::rook(sq, allies, enemies);
         case PieceType::BISHOP: return bitboard_moves::bishop(sq, allies, enemies);
@@ -282,7 +266,8 @@ std::uint64_t Board::get_promotion_row(Color c){
 
 std::uint64_t Board::get_en_passant_row(Color c){
     using namespace bitboard;
-    return c == Color::WHITE ? slide<S>(slide<S>(tables::defaults::bitboards_init[to_int(Piece::BLACK_PAWN)])) : slide<N>(slide<N>(tables::defaults::bitboards_init[to_int(Piece::WHITE_PAWN)]));
+    return c == Color::WHITE ? slide<S>(slide<S>(tables::defaults::bitboards_init[Piece::BLACK_PAWN])) : 
+                               slide<N>(slide<N>(tables::defaults::bitboards_init[Piece::WHITE_PAWN]));
 }
 
 
@@ -293,7 +278,6 @@ std::uint64_t Board::get_en_passant_row(Color c){
 //With turns-based moves, this exception will never occur
 std::uint64_t Board::get_legal_quiets_and_captures(int sq){
     Piece piece = pieces[sq];
-    int piece_idx = to_int(piece);
     Color ally_color = get_color(piece);
     Color enemy_color = other_color(ally_color);
     PieceType ally_type = get_type(piece);
@@ -304,8 +288,8 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
     std::uint64_t attacks = get_quiets_and_captures(sq);
     if(ally_type == PieceType::KING){
         std::uint64_t legal_moves = 0;
-        bitboards[piece_idx] = 0;
-        all_pieces[to_int(ally_color)] ^= (1ull << sq);
+        bitboards[piece] = 0;
+        all_pieces[ally_color] ^= (1ull << sq);
         while(attacks){
             int dest = std::countr_zero(attacks);
             std::uint64_t dest_mask = 1ull << dest;
@@ -314,8 +298,8 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
             }
             attacks ^= dest_mask;
         }
-        bitboards[piece_idx] = 1ull << sq;
-        all_pieces[to_int(ally_color)] ^= (1ull << sq);
+        bitboards[piece] = 1ull << sq;
+        all_pieces[ally_color] ^= (1ull << sq);
         return legal_moves;
     }
     else{
@@ -326,12 +310,12 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
         int king_sq = get_king_pos(ally_color);
         std::uint64_t b_ray = bishop_ray[king_sq][sq];
         std::uint64_t r_ray = rook_ray[king_sq][sq];
-        std::uint64_t enemy_queen = bitboards[to_int(to_piece(enemy_color, PieceType::QUEEN))];
-        std::uint64_t enemy_rook = bitboards[to_int(to_piece(enemy_color, PieceType::ROOK))];
-        std::uint64_t enemy_bishop = bitboards[to_int(to_piece(enemy_color, PieceType::BISHOP))];
+        std::uint64_t enemy_queen = bitboards[to_piece(enemy_color, PieceType::QUEEN)];
+        std::uint64_t enemy_rook = bitboards[to_piece(enemy_color, PieceType::ROOK)];
+        std::uint64_t enemy_bishop = bitboards[to_piece(enemy_color, PieceType::BISHOP)];
         bool pinned_by_bishop = b_ray & (enemy_queen | enemy_bishop);
         bool pinned_by_rook = r_ray & (enemy_queen | enemy_rook);
-        bool pinned = ((between[king_sq][sq] & (all_pieces[0] | all_pieces[1])) == 0) && (pinned_by_bishop || pinned_by_rook);
+        bool pinned = ((between[king_sq][sq] & (all_pieces[Color::WHITE] | all_pieces[Color::BLACK])) == 0) && (pinned_by_bishop || pinned_by_rook);
         if(pinned & checked){
             return 0;
         }
@@ -351,7 +335,7 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
 std::uint64_t Board::get_castle_moves(Color c){
     std::uint64_t moves = 0;
     if(get_checkers(c) != 0) return moves;
-    std::uint64_t occ = all_pieces[to_int(Color::WHITE)] | all_pieces[to_int(Color::BLACK)];
+    std::uint64_t occ = all_pieces[Color::WHITE] | all_pieces[Color::BLACK];
     if(c == Color::WHITE){
         constexpr std::uint64_t white_left_castle_mask = (1ull << 4) | (1ull << 5) | (1ull << 6);
         constexpr std::uint64_t white_right_castle_mask = (1ull << 1) | (1ull << 2);
@@ -392,9 +376,9 @@ MoveList Board::get_legal_moves(int sq){
         return legal_moves;
     }
     PieceType ally_type = get_type(piece);
-    int enemy_idx = to_int(other_color(ally_color));
+    Color enemy_color = other_color(ally_color);
     std::uint64_t quiets_and_captures = get_legal_quiets_and_captures(sq);
-    std::uint64_t enemies = all_pieces[enemy_idx];
+    std::uint64_t enemies = all_pieces[enemy_color];
     std::uint64_t en_passant = (get_type(piece) == PieceType::PAWN && ((1ull << sq) & get_en_passant_row(ally_color))) ? bitboard_moves::pawn_en_passant(sq, ally_color, en_passant_sq) : 0;
     std::uint64_t castles = ally_type == PieceType::KING ? get_castle_moves(ally_color) : 0;
     // keep in mind for future: if a pawn has one promotion move it can currently perform, then all of its moves must be promotions also
@@ -501,10 +485,10 @@ void Board::assert_valid() const{
             std::uint64_t dest = 1ull << i;
             for(Piece occ: piece_enum){
                 if(occ == p){
-                    assert(((bitboards[to_int(occ)] & dest) && "Occupancy board must be turned on at this bit"));
+                    assert(((bitboards[occ] & dest) && "Occupancy board must be turned on at this bit"));
                 }
                 else{
-                    assert((!(bitboards[to_int(occ)] & dest) && "Occupancy board must be turned off at this bit"));
+                    assert((!(bitboards[occ] & dest) && "Occupancy board must be turned off at this bit"));
                 }
             }
         }

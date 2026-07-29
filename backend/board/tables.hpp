@@ -4,6 +4,7 @@
 #include <cstdint>
 #include "bitboard.hpp"
 #include "piece.hpp"
+#include "enum_arr.hpp"
 
 
 namespace tables{
@@ -228,8 +229,8 @@ namespace tables{
 
 
     namespace defaults{
-        constexpr std::array<Piece, 64> pieces_init = [](){ 
-            std::array<Piece, 64> pieces{};
+        constexpr EnumArr<Piece, 64> pieces_init = [](){ 
+            EnumArr<Piece, 64> pieces{};
             pieces[0] = pieces[7] = Piece::WHITE_ROOK;
             pieces[1] = pieces[6] = Piece::WHITE_KNIGHT;
             pieces[2] = pieces[5] = Piece::WHITE_BISHOP;
@@ -247,26 +248,23 @@ namespace tables{
             return pieces;
         }();
 
-        constexpr std::array<std::uint64_t, 14> bitboards_init = [](){
+        constexpr EnumArr<std::uint64_t, 14> bitboards_init = [](){
             int sq = 0;
-            std::array<std::uint64_t, 14> bitboards{};
+            EnumArr<std::uint64_t, 14> bitboards{};
             for(std::uint64_t trav = 1; trav; trav <<= 1){
-                int i = to_int(pieces_init[sq]);
-                bitboards[i] |= 1ull << sq;
+                bitboards[pieces_init[sq]] |= 1ull << sq;
                 sq++;
             }
             return bitboards;
         }();
 
-        constexpr std::array<std::uint64_t, 2> all_pieces_init = [](){
-            std::array<std::uint64_t, 2> all_pieces{};
-            std::array<Color, 2> colors = {Color::WHITE, Color::BLACK};
-            std::array<PieceType, 6> types = {PieceType::PAWN, PieceType::ROOK, PieceType::KNIGHT, PieceType::BISHOP, PieceType::QUEEN, PieceType::KING};
+        constexpr EnumArr<std::uint64_t, 2> all_pieces_init = [](){
+            EnumArr<std::uint64_t, 2> all_pieces{};
+            EnumArr<Color, 2> colors{{Color::WHITE, Color::BLACK}};
+            std::array<PieceType, 6> types{PieceType::PAWN, PieceType::ROOK, PieceType::KNIGHT, PieceType::BISHOP, PieceType::QUEEN, PieceType::KING};
             for(Color c: colors){
-                int color_idx = static_cast<int>(c);
                 for(PieceType p: types){
-                    int piece_idx = static_cast<int>(to_piece(c, p));
-                    all_pieces[color_idx] |= bitboards_init[piece_idx];
+                    all_pieces[c] |= bitboards_init[to_piece(c, p)];
                 }
             }
             return all_pieces;

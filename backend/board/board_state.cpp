@@ -1,7 +1,7 @@
 #include "board_state.hpp"
 #include "board.hpp"
 
-BoardState::BoardState(Board& board): m_pieces{board.pieces}, m_in_check{{board.in_check(Color::WHITE), board.in_check(Color::BLACK)}}{
+BoardState::BoardState(Board& board): m_pieces{board.pieces.to_array()}, m_in_check{{board.in_check(Color::WHITE), board.in_check(Color::BLACK)}}{
     for(int sq = 0; sq < 64; sq++){
        m_move_lists[sq] = board.get_legal_moves(sq);
     }
@@ -9,7 +9,7 @@ BoardState::BoardState(Board& board): m_pieces{board.pieces}, m_in_check{{board.
 
 
 bool BoardState::in_check(Color c){
-    return m_in_check[to_int(c)];
+    return m_in_check[c];
 }
 
 

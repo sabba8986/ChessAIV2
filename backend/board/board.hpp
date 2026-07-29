@@ -4,6 +4,7 @@
 #include "piece.hpp"
 #include "move.hpp"
 #include "move_list.hpp"
+#include "enum_arr.hpp"
 #include "history.hpp"
 #include <cstdint>
 #include <array>
@@ -20,15 +21,15 @@ class Board{
     
     //bitboards for each color ({WHITE, BLACK}). Pieces are in the order of: 
     //{Pawn, Rook, Knight, Bishop, Queen, King, Empty}
-    std::array<std::uint64_t, 14> bitboards;
-    std::array<std::uint64_t, 2> all_pieces;
-    std::array<Piece, 64> pieces;
+    EnumArr<std::uint64_t, 14> bitboards;
+    EnumArr<std::uint64_t, 2> all_pieces;
+    EnumArr<Piece, 64> pieces;
+    EnumArr<std::uint64_t, 2> pinned;
+    std::stack<History> prev_moves;
     int en_passant_sq;
     std::uint8_t castle_rights;
     int clock;
-    std::stack<History> prev_moves;
     Color turn;
-    std::array<std::uint64_t, 2> pinned;
 
     std::uint64_t get_checkers(Color c) const;
 

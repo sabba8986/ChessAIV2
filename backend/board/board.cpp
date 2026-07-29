@@ -255,20 +255,17 @@ std::uint64_t Board::get_checkers(Color c) const{
 }
 
 
-std::uint64_t Board::pinner(int sq){
+
+std::uint64_t Board::pin_rays(int sq){
     assert(pieces[sq] != Piece::EMPTY && "Empty square cannot be pinned");
-    Piece piece = pieces[sq];
-    Color ally_color = get_color(piece);
-    int piece_idx = to_int(piece);
-    int ally_idx = to_int(ally_color);
-    std::uint64_t pos = 1ull << sq;
-    std::uint64_t prev_checkers = get_checkers(ally_color);
-    bitboards[piece_idx] ^= pos;
-    all_pieces[ally_idx] ^= pos;
-    std::uint64_t after_checkers = get_checkers(ally_color);
-    bitboards[piece_idx] ^= pos;
-    all_pieces[ally_idx] ^= pos;
-    return prev_checkers ^ after_checkers; 
+    using namespace tables::pins;
+    Color ally_color = get_color(pieces[sq]);
+    int king_pos;
+    std::uint64_t enemy_queens, enemy_rooks, enemy_bishops;
+    
+    return between[king_pos][sq] & (all_pieces[0] | all_pieces[1]) ? UINT64_MAX : 
+            (rook_ray[king_pos][sq]) | 
+            (bishop_ray[king_pos][sq]);
 }
 
 
@@ -333,16 +330,16 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
         }
         bitboards[piece_idx] = 1ull << sq;
         all_pieces[to_int(ally_color)] ^= (1ull << sq);
-        recalculate_all_pieces();
         return legal_moves;
     }
     else{
         //if this point reached, piece is not king and there is at most one checker
-        std::uint64_t pin = pinner(sq);
-        if(pin != 0 && in_check(ally_color)){
+        bool pinned = is_pinned(sq);
+        bool in_check = in_check(ally_color);
+        if(pinned & in_check){
             return 0;
         }
-        else if(pin != 0){
+        else if(pinned){
             int pin_sq = std::countr_zero(pin);
             int king_idx = to_int(to_piece(ally_color, PieceType::KING));
             int king_sq = std::countr_zero(bitboards[king_idx]);

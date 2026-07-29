@@ -1,7 +1,7 @@
 #ifndef TABLES
 #define TABLES
-#include<array>
-#include<cstdint>
+#include <array>
+#include <cstdint>
 #include "bitboard.hpp"
 #include "piece.hpp"
 
@@ -183,7 +183,28 @@ namespace tables{
 
 
     namespace pins{
-        constexpr auto attack_from_piece_to_king = [](){
+        template<PieceType t>
+        constexpr auto populate_table(){
+            static_assert((t == PieceType::BISHOP) || (t == PieceType::ROOK));
+            using namespace bitboard;
+            std::array<std::array<std::uint64_t, 64>, 64> table{};
+            const auto dirs = get_directions(t);
+            for(int k = 0; k < 64; k++){
+                for(int p = 0; p < 64; p++){
+                    for(Direction d: dirs){
+                        if(ray(1ull << k, d) & (1ull << p)){
+                            table[k][p] = ray(1ull << p, d);
+                            break;
+                        }
+                    }
+                }
+            }
+            return table;
+        }
+
+        constexpr auto rook_ray = populate_table<PieceType::ROOK>();
+        constexpr auto bishop_ray = populate_table<PieceType::BISHOP>();
+        constexpr auto between = [](){
             using namespace bitboard;
             std::array<std::array<std::uint64_t, 64>, 64> table{};
             for(int i = 0; i < 64; i++){
@@ -195,8 +216,8 @@ namespace tables{
                         (ray<N>(a) & ray<S>(b)) | 
                         (ray<NW>(a) & ray<SE>(b)) | 
                         (ray<W>(a) & ray<E>(b)); 
-                    table[i][j] = attack_ray | a;
-                    table[j][i] = attack_ray | b;
+                    table[i][j] = attack_ray;
+                    table[j][i] = attack_ray;
                 }
             }
             return table;

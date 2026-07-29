@@ -29,10 +29,8 @@ class Board{
     std::stack<History> prev_moves;
     Color turn;
 
-
-    int get_king_pos(Color c) const;
     std::uint64_t get_checkers(Color c) const;
-    std::uint64_t pinner(int sq);
+    std::uint64_t pin_rays(int sq);
 
     void do_castle(int src, int dest);
     void move_piece(int src, int dest);
@@ -52,6 +50,7 @@ class Board{
     std::uint64_t get_en_passant_row(Color c);
 public:
     Board();
+    int get_king_pos(Color c) const;
     MoveList get_legal_moves(int sq);
     void make_move(Move move);
     void undo_last_move();

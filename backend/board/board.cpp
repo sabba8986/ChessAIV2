@@ -255,20 +255,6 @@ std::uint64_t Board::get_checkers(Color c) const{
 }
 
 
-
-std::uint64_t Board::pin_rays(int sq){
-    assert(pieces[sq] != Piece::EMPTY && "Empty square cannot be pinned");
-    using namespace tables::pins;
-    Color ally_color = get_color(pieces[sq]);
-    int king_pos;
-    std::uint64_t enemy_queens, enemy_rooks, enemy_bishops;
-    
-    return between[king_pos][sq] & (all_pieces[0] | all_pieces[1]) ? UINT64_MAX : 
-            (rook_ray[king_pos][sq]) | 
-            (bishop_ray[king_pos][sq]);
-}
-
-
 std::uint64_t Board::get_quiets_and_captures(int sq) const{
     Piece piece = pieces[sq];
     Color ally_color = get_color(piece);
@@ -334,24 +320,26 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
     }
     else{
         //if this point reached, piece is not king and there is at most one checker
-        bool pinned = is_pinned(sq);
-        bool in_check = in_check(ally_color);
-        if(pinned & in_check){
+        using namespace tables::pins;
+        std::uint64_t checkers = get_checkers(ally_color);
+        bool checked = checkers != 0;
+        int king_sq = get_king_pos(ally_color);
+        std::uint64_t b_ray = bishop_ray[king_sq][sq];
+        std::uint64_t r_ray = rook_ray[king_sq][sq];
+        std::uint64_t enemy_queen = bitboards[to_int(to_piece(enemy_color, PieceType::QUEEN))];
+        std::uint64_t enemy_rook = bitboards[to_int(to_piece(enemy_color, PieceType::ROOK))];
+        std::uint64_t enemy_bishop = bitboards[to_int(to_piece(enemy_color, PieceType::BISHOP))];
+        bool pinned_by_bishop = b_ray & (enemy_queen | enemy_bishop);
+        bool pinned_by_rook = r_ray & (enemy_queen | enemy_rook);
+        bool pinned = ((between[king_sq][sq] & (all_pieces[0] | all_pieces[1])) == 0) && (pinned_by_bishop || pinned_by_rook);
+        if(pinned & checked){
             return 0;
         }
         else if(pinned){
-            int pin_sq = std::countr_zero(pin);
-            int king_idx = to_int(to_piece(ally_color, PieceType::KING));
-            int king_sq = std::countr_zero(bitboards[king_idx]);
-            std::uint64_t line_of_attack = tables::pins::attack_from_piece_to_king[pin_sq][king_sq];
-            return line_of_attack & attacks;
+            return pinned_by_bishop ? b_ray & attacks : r_ray & attacks;
         }
-        else if(in_check(ally_color)){
-            int checker_sq = std::countr_zero(get_checkers(ally_color));
-            int king_idx = to_int(to_piece(ally_color, PieceType::KING));
-            int king_sq = std::countr_zero(bitboards[king_idx]);
-            std::uint64_t line_of_attack = tables::pins::attack_from_piece_to_king[checker_sq][king_sq];
-            return line_of_attack & attacks;
+        else if(checked){
+            return attacks & between[king_sq][std::countr_zero(checkers)];
         }
         else{
             return attacks;
@@ -570,4 +558,5 @@ void Board::reset(){
     castle_rights = white_left_castle_allowed_flag | white_right_castle_allowed_flag | black_left_castle_allowed_flag | black_right_castle_allowed_flag;
     clock = 0;
     turn = Color::WHITE;
+    pinned = {0, 0};
 }

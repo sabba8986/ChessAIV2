@@ -28,9 +28,9 @@ class Board{
     int clock;
     std::stack<History> prev_moves;
     Color turn;
+    std::array<std::uint64_t, 2> pinned;
 
     std::uint64_t get_checkers(Color c) const;
-    std::uint64_t pin_rays(int sq);
 
     void do_castle(int src, int dest);
     void move_piece(int src, int dest);
@@ -48,6 +48,10 @@ class Board{
     std::uint64_t get_legal_quiets_and_captures(int sq);
     std::uint64_t get_castle_moves(Color c);
     std::uint64_t get_en_passant_row(Color c);
+    void recalculate_pinned();
+
+    template<Color c> 
+    void recalculate_pinned();
 public:
     Board();
     int get_king_pos(Color c) const;
@@ -64,5 +68,12 @@ public:
     void populate_perft(int depth, PerftResults& stats);
     friend struct BoardState;
 };
+
+
+template<Color c>
+void Board::recalculate_pinned(){
+    constexpr Color enemy_color = other_color(c);
+}
+
 
 #endif

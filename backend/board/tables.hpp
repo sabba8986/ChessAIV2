@@ -183,27 +183,6 @@ namespace tables{
 
 
     namespace pins{
-        template<PieceType t>
-        constexpr auto populate_table(){
-            static_assert((t == PieceType::BISHOP) || (t == PieceType::ROOK));
-            using namespace bitboard;
-            std::array<std::array<std::uint64_t, 64>, 64> table{};
-            const auto dirs = get_directions(t);
-            for(int k = 0; k < 64; k++){
-                for(int p = 0; p < 64; p++){
-                    for(Direction d: dirs){
-                        if(ray(1ull << k, d) & (1ull << p)){
-                            table[k][p] = ray(1ull << p, d);
-                            break;
-                        }
-                    }
-                }
-            }
-            return table;
-        }
-
-        constexpr auto rook_ray = populate_table<PieceType::ROOK>();
-        constexpr auto bishop_ray = populate_table<PieceType::BISHOP>();
         constexpr auto between = [](){
             using namespace bitboard;
             std::array<std::array<std::uint64_t, 64>, 64> table{};
@@ -222,6 +201,29 @@ namespace tables{
             }
             return table;
         }();
+
+        template<PieceType t>
+        constexpr auto populate_table(){
+            static_assert((t == PieceType::BISHOP) || (t == PieceType::ROOK));
+            using namespace bitboard;
+            std::array<std::array<std::uint64_t, 64>, 64> table{};
+            const auto dirs = get_directions(t);
+            for(int k = 0; k < 64; k++){
+                for(int p = 0; p < 64; p++){
+                    for(Direction d: dirs){
+                        if(ray(1ull << k, d) & (1ull << p)){
+                            table[k][p] = ray(1ull << p, d) | between[k][p];
+                            break;
+                        }
+                    }
+                }
+            }
+            return table;
+        }
+
+        constexpr auto rook_ray = populate_table<PieceType::ROOK>();
+        constexpr auto bishop_ray = populate_table<PieceType::BISHOP>();
+        
     }
 
 

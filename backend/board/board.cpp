@@ -1,5 +1,5 @@
 #include "board.hpp"
-#include "constants.hpp"
+#include "tables.hpp"
 #include "move.hpp"
 #include "bitboard_moves.hpp"
 #include "undo_move.hpp"
@@ -7,7 +7,6 @@
 #include <bit>
 #include <utility>
 #include <cassert>
-#include <iostream>
 
 
 
@@ -256,8 +255,8 @@ std::uint64_t Board::get_checkers(Color c) const{
 }
 
 
-//assumes nonempty piece is at sq
 std::uint64_t Board::pinner(int sq){
+    assert(pieces[sq] != Piece::EMPTY && "Empty square cannot be pinned");
     Piece piece = pieces[sq];
     Color ally_color = get_color(piece);
     int piece_idx = to_int(piece);
@@ -300,7 +299,7 @@ std::uint64_t Board::get_promotion_row(Color c){
 
 std::uint64_t Board::get_en_passant_row(Color c){
     using namespace bitboard;
-    return c == Color::WHITE ? slide<S>(slide<S>(defaults::bitboards_init[to_int(Piece::BLACK_PAWN)])) : slide<N>(slide<N>(defaults::bitboards_init[to_int(Piece::WHITE_PAWN)]));
+    return c == Color::WHITE ? slide<S>(slide<S>(tables::defaults::bitboards_init[to_int(Piece::BLACK_PAWN)])) : slide<N>(slide<N>(tables::defaults::bitboards_init[to_int(Piece::WHITE_PAWN)]));
 }
 
 
@@ -347,14 +346,14 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
             int pin_sq = std::countr_zero(pin);
             int king_idx = to_int(to_piece(ally_color, PieceType::KING));
             int king_sq = std::countr_zero(bitboards[king_idx]);
-            std::uint64_t line_of_attack = tables::attack_from_piece_to_king[pin_sq][king_sq];
+            std::uint64_t line_of_attack = tables::pins::attack_from_piece_to_king[pin_sq][king_sq];
             return line_of_attack & attacks;
         }
         else if(in_check(ally_color)){
             int checker_sq = std::countr_zero(get_checkers(ally_color));
             int king_idx = to_int(to_piece(ally_color, PieceType::KING));
             int king_sq = std::countr_zero(bitboards[king_idx]);
-            std::uint64_t line_of_attack = tables::attack_from_piece_to_king[checker_sq][king_sq];
+            std::uint64_t line_of_attack = tables::pins::attack_from_piece_to_king[checker_sq][king_sq];
             return line_of_attack & attacks;
         }
         else{
@@ -566,12 +565,12 @@ void Board::populate_perft(int depth, PerftResults& stats){
 
 
 void Board::reset(){
-    using namespace defaults;
+    using namespace tables::defaults;
     bitboards = bitboards_init;
     all_pieces = all_pieces_init;
     pieces = pieces_init;
     en_passant_sq = 0;
-    castle_rights = castle_rights_init;
+    castle_rights = white_left_castle_allowed_flag | white_right_castle_allowed_flag | black_left_castle_allowed_flag | black_right_castle_allowed_flag;
     clock = 0;
     turn = Color::WHITE;
 }

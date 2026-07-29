@@ -1,5 +1,5 @@
 #include "bitboard_moves.hpp"
-#include "constants.hpp"
+#include "tables.hpp"
 
 
 std::uint64_t bitboard_moves::pawn_captures(int sq, Color c, std::uint64_t enemies){
@@ -8,16 +8,14 @@ std::uint64_t bitboard_moves::pawn_captures(int sq, Color c, std::uint64_t enemi
     return ((c == Color::WHITE) ? slide<NE>(pos) | slide<NW>(pos) : slide<SE>(pos) | slide<SW>(pos)) & enemies;
 }
 
-
 std::uint64_t bitboard_moves::pawn_en_passant(int sq, Color c, int en_passant_sq){
     return pawn_captures(sq, c, 1ull << en_passant_sq);
 }
 
-
 std::uint64_t bitboard_moves::pawn(int sq, Color c, std::uint64_t allies, std::uint64_t enemies){
     using namespace bitboard;
-    constexpr std::uint64_t white_two_square_mask = slide<N>(defaults::bitboards_init[static_cast<int>(Piece::WHITE_PAWN)]);
-    constexpr std::uint64_t black_two_square_mask = slide<S>(defaults::bitboards_init[static_cast<int>(Piece::BLACK_PAWN)]);
+    constexpr std::uint64_t white_two_square_mask = slide<N>(tables::defaults::bitboards_init[static_cast<int>(Piece::WHITE_PAWN)]);
+    constexpr std::uint64_t black_two_square_mask = slide<S>(tables::defaults::bitboards_init[static_cast<int>(Piece::BLACK_PAWN)]);
     std::uint64_t pos = 1ull << sq;
     std::uint64_t occupancy = allies | enemies;
     std::uint64_t forward;
@@ -32,17 +30,18 @@ std::uint64_t bitboard_moves::pawn(int sq, Color c, std::uint64_t allies, std::u
     return forward | pawn_captures(sq, c, enemies);
 }
 
-
 std::uint64_t bitboard_moves::rook(int sq, std::uint64_t allies, std::uint64_t enemies){
-    const auto& info = tables::rook_magics[sq];
+    using namespace tables;
+    const auto& info = magics::rook[sq];
     std::uint64_t occupancy = (allies | enemies) & info.mask;
-    return tables::rook_attacks[tables::get_index_from_magic(occupancy, info)] & ~allies;
+    return attacks::rook[magics::get_index_from_magic(occupancy, info)] & ~allies;
 }
 
 std::uint64_t bitboard_moves::bishop(int sq, std::uint64_t allies, std::uint64_t enemies){
-    const auto& info = tables::bishop_magics[sq];
+    using namespace tables;
+    const auto& info = magics::bishop[sq];
     std::uint64_t occupancy = (allies | enemies) & info.mask;
-    return tables::bishop_attacks[tables::get_index_from_magic(occupancy, info)] & ~allies;
+    return attacks::bishop[magics::get_index_from_magic(occupancy, info)] & ~allies;
 }
 
 std::uint64_t bitboard_moves::queen(int sq, std::uint64_t allies, std::uint64_t enemies){
@@ -50,11 +49,10 @@ std::uint64_t bitboard_moves::queen(int sq, std::uint64_t allies, std::uint64_t 
 }
 
 std::uint64_t bitboard_moves::knight(int sq, std::uint64_t allies, std::uint64_t enemies){
-    return tables::knight_attacks[sq] & ~allies;
+    return tables::attacks::knight[sq] & ~allies;
 }
 
-
 std::uint64_t bitboard_moves::king(int sq, std::uint64_t allies, std::uint64_t enemies){
-    return tables::king_attacks[sq] & ~allies;
+    return tables::attacks::king[sq] & ~allies;
 }
 

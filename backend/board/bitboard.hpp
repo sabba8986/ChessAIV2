@@ -152,7 +152,6 @@ namespace bitboard{
         }
         return result;
     }
-
 };
 
 #endif

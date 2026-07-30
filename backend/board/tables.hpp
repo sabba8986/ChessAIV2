@@ -204,11 +204,30 @@ namespace tables{
         }();
 
         template<PieceType t>
-        constexpr auto populate_table(){
-            static_assert((t == PieceType::BISHOP) || (t == PieceType::ROOK));
+        constexpr auto populate_select_between(){
             using namespace bitboard;
             std::array<std::array<std::uint64_t, 64>, 64> table{};
             const auto dirs = get_directions(t);
+            for(int k = 0; k < 64; k++){
+                for(int p = 0; p < 64; p++){
+                    for(Direction d: dirs){
+                        if(ray(1ull << k, d) & (1ull << p)){
+                            table[k][p] = between[k][p];
+                            break;
+                        }
+                    }
+                }
+            }
+            return table;
+        }
+
+        constexpr auto diagonal_between = populate_select_between<PieceType::BISHOP>();
+        constexpr auto straight_between = populate_select_between<PieceType::ROOK>();
+
+        constexpr auto pin_rays = [](){
+            using namespace bitboard;
+            std::array<std::array<std::uint64_t, 64>, 64> table{};
+            const auto dirs = get_directions(PieceType::QUEEN);
             for(int k = 0; k < 64; k++){
                 for(int p = 0; p < 64; p++){
                     for(Direction d: dirs){
@@ -220,11 +239,7 @@ namespace tables{
                 }
             }
             return table;
-        }
-
-        constexpr auto rook_ray = populate_table<PieceType::ROOK>();
-        constexpr auto bishop_ray = populate_table<PieceType::BISHOP>();
-        
+        }();      
     }
 
 

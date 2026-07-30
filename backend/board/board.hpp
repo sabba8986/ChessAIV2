@@ -9,8 +9,10 @@
 #include <cstdint>
 #include <array>
 #include <stack>
+#include <bit>
 #include "board_state.hpp"
 #include "perft_results.hpp"
+#include "tables.hpp"
 
 
 class Board{
@@ -73,7 +75,32 @@ public:
 
 template<Color c>
 void Board::recalculate_pinned(){
+    using namespace tables::pins;
     constexpr Color enemy_color = other_color(c);
+    int king_sq = get_king_pos(c);
+    pinned[c] = 0;
+    std::uint64_t enemy_queens = bitboards[to_piece(enemy_color, PieceType::QUEEN)];
+    std::uint64_t diagonal_attackers = bitboards[to_piece(enemy_color, PieceType::BISHOP)] | enemy_queens;
+    std::uint64_t straight_attackers = bitboards[to_piece(enemy_color, PieceType::ROOK)] | enemy_queens;
+    std::uint64_t all_occ = all_pieces[Color::WHITE] | all_pieces[Color::BLACK];
+    while(diagonal_attackers){
+        int pinner_sq = std::countr_zero(diagonal_attackers);
+        std::uint64_t blockers = diagonal_between[pinner_sq][king_sq] & all_occ;
+        std::uint64_t ally_blockers = blockers & all_pieces[c];
+        if(std::has_single_bit(blockers) && (ally_blockers != 0)){
+            pinned[c] |= ally_blockers;
+        }
+        diagonal_attackers ^= (1ull << pinner_sq);
+    }
+    while(straight_attackers){
+        int pinner_sq = std::countr_zero(straight_attackers);
+        std::uint64_t blockers = straight_between[pinner_sq][king_sq] & all_occ;
+        std::uint64_t ally_blockers = blockers & all_pieces[c];
+        if(std::has_single_bit(blockers) && (ally_blockers != 0)){
+            pinned[c] |= ally_blockers;
+        }
+        straight_attackers ^= (1ull << pinner_sq);
+    }
 }
 
 

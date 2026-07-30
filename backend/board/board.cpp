@@ -9,7 +9,6 @@
 #include <cassert>
 
 
-
 Board::Board(){
     reset();
 }
@@ -119,6 +118,7 @@ void Board::make_move(Move move){
     }
     turn = other_color(turn);
     recalculate_all_pieces();
+    recalculate_pinned();
     assert_valid();
     assert(!in_check(other_color(turn)) && "Cannot leave ally king in check after ally move");
 }
@@ -232,6 +232,7 @@ void Board::undo_last_move(){
     turn = other_color(turn);
     clock = undo_info.clock();
     recalculate_all_pieces();
+    recalculate_pinned();
     assert_valid();
 }
 
@@ -271,6 +272,12 @@ std::uint64_t Board::get_en_passant_row(Color c){
 }
 
 
+void Board::recalculate_pinned(){
+    recalculate_pinned<Color::WHITE>();
+    recalculate_pinned<Color::BLACK>();
+}
+
+
 //An exception will occur at get_checkers if the user tries to move a piece that is already attacking the opponent king. 
 //This is because when testing all possible moves that piece may make for legality, 
 //one of those moves will involve capturing the opponent king. 
@@ -306,24 +313,23 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
         //if this point reached, piece is not king and there is at most one checker
         using namespace tables::pins;
         std::uint64_t checkers = get_checkers(ally_color);
-        bool checked = checkers != 0;
+        bool is_checked = (checkers != 0);
         int king_sq = get_king_pos(ally_color);
-        std::uint64_t b_ray = bishop_ray[king_sq][sq];
-        std::uint64_t r_ray = rook_ray[king_sq][sq];
-        std::uint64_t enemy_queen = bitboards[to_piece(enemy_color, PieceType::QUEEN)];
-        std::uint64_t enemy_rook = bitboards[to_piece(enemy_color, PieceType::ROOK)];
-        std::uint64_t enemy_bishop = bitboards[to_piece(enemy_color, PieceType::BISHOP)];
-        bool pinned_by_bishop = b_ray & (enemy_queen | enemy_bishop);
-        bool pinned_by_rook = r_ray & (enemy_queen | enemy_rook);
-        bool pinned = ((between[king_sq][sq] & (all_pieces[Color::WHITE] | all_pieces[Color::BLACK])) == 0) && (pinned_by_bishop || pinned_by_rook);
-        if(pinned & checked){
+        bool is_pinned = (pinned[ally_color] & (1ull << sq));
+        if(is_pinned && is_checked){
             return 0;
         }
-        else if(pinned){
-            return pinned_by_bishop ? b_ray & attacks : r_ray & attacks;
+        else if(is_pinned){
+            return pin_rays[king_sq][sq] & attacks;
         }
-        else if(checked){
-            return attacks & between[king_sq][std::countr_zero(checkers)];
+        else if(is_checked){
+            int checker_pos = std::countr_zero(checkers);
+            PieceType checker_type = get_type(pieces[checker_pos]);
+            std::uint64_t check_eliminaters = checkers;
+            if(checker_type == PieceType::BISHOP || checker_type == PieceType::ROOK || checker_type == PieceType::QUEEN){
+                check_eliminaters |= between[king_sq][checker_pos];
+            }
+            return attacks & check_eliminaters;
         }
         else{
             return attacks;

@@ -14,8 +14,8 @@ private:
     static constexpr std::uint16_t src_mask = 63;
     static constexpr std::uint16_t dest_mask = 63 << 6;
     static constexpr std::uint16_t promotion_mask = 3 << 14;
-    std::uint16_t move;
 public:
+    std::uint16_t move;
     typedef std::uint16_t MoveFlag;
     static constexpr MoveFlag empty_flag = 0;
     static constexpr MoveFlag promotion_flag = 1u << 12;

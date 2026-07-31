@@ -94,7 +94,8 @@ void Board::make_move(Move move){
     int src = move.src();
     int dest = move.dest();
     Piece moved = pieces[src];
-    prev_moves.emplace(move, UndoMove(en_passant_sq, get_type(pieces[dest]), castle_rights, clock));
+    Color enemy_color = other_color(turn);
+    prev_moves.emplace(move, UndoMove(en_passant_sq, get_type(pieces[dest]), castle_rights, clock, pinned));
     if(move.is_castle()){
         do_castle(src, dest);
     }
@@ -116,11 +117,10 @@ void Board::make_move(Move move){
     else{
         en_passant_sq = 0;
     }
-    turn = other_color(turn);
+    turn = enemy_color;
     recalculate_all_pieces();
-    recalculate_pinned();
+    recalculate_pinned(enemy_color);
     assert_valid();
-    assert(!in_check(other_color(turn)) && "Cannot leave ally king in check after ally move");
 }
 
 
@@ -229,10 +229,10 @@ void Board::undo_last_move(){
     }
     en_passant_sq = undo_info.en_passant_sq();
     castle_rights = undo_info.castle_rights();
+    pinned = undo_info.prev_enemy_pinned();
     turn = other_color(turn);
     clock = undo_info.clock();
     recalculate_all_pieces();
-    recalculate_pinned();
     assert_valid();
 }
 
@@ -272,9 +272,13 @@ std::uint64_t Board::get_en_passant_row(Color c){
 }
 
 
-void Board::recalculate_pinned(){
-    recalculate_pinned<Color::WHITE>();
-    recalculate_pinned<Color::BLACK>();
+void Board::recalculate_pinned(Color c){
+    if(c == Color::WHITE){
+        recalculate_pinned<Color::WHITE>();
+    }
+    else{
+        recalculate_pinned<Color::BLACK>();
+    }
 }
 
 
@@ -315,7 +319,7 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
         std::uint64_t checkers = get_checkers(ally_color);
         bool is_checked = (checkers != 0);
         int king_sq = get_king_pos(ally_color);
-        bool is_pinned = (pinned[ally_color] & (1ull << sq));
+        bool is_pinned = (pinned & (1ull << sq));
         if(is_pinned && is_checked){
             return 0;
         }
@@ -548,5 +552,5 @@ void Board::reset(){
     castle_rights = white_left_castle_allowed_flag | white_right_castle_allowed_flag | black_left_castle_allowed_flag | black_right_castle_allowed_flag;
     clock = 0;
     turn = Color::WHITE;
-    pinned = {0, 0};
+    pinned = 0;
 }

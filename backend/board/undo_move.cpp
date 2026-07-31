@@ -1,11 +1,11 @@
 #include "undo_move.hpp"
 
-UndoMove::UndoMove(int en_passant_sq, PieceType captured_piece_type, std::uint8_t castle_rights, int clock): 
-    m_en_passant_sq{en_passant_sq}, m_captured_piece_type{captured_piece_type}, m_castle_rights{castle_rights}, m_clock{clock}{}
+UndoMove::UndoMove(int en_passant_sq, PieceType captured_piece_type, std::uint8_t castle_rights, int clock, std::uint64_t prev_enemy_pinned): 
+    m_en_passant_sq{en_passant_sq}, m_captured_piece_type{captured_piece_type}, m_castle_rights{castle_rights}, m_clock{clock}, m_prev_enemy_pinned{prev_enemy_pinned}{}
 
 
 UndoMove::UndoMove(UndoMove&& other): 
-    m_en_passant_sq{other.m_en_passant_sq}, m_captured_piece_type{other.m_captured_piece_type}, m_castle_rights{other.m_castle_rights}, 
+    m_en_passant_sq{other.m_en_passant_sq}, m_captured_piece_type{other.m_captured_piece_type}, m_castle_rights{other.m_castle_rights}, m_prev_enemy_pinned{other.m_prev_enemy_pinned},
     m_clock{other.m_clock}{}
 
 
@@ -14,6 +14,7 @@ UndoMove& UndoMove::operator=(UndoMove&& other){
     m_captured_piece_type = other.m_captured_piece_type;
     m_castle_rights = other.m_castle_rights;
     m_clock = other.m_clock;
+    m_prev_enemy_pinned = other.m_prev_enemy_pinned;
     return *this;
 }
 
@@ -38,3 +39,6 @@ int UndoMove::clock(){
 }
 
 
+std::uint64_t UndoMove::prev_enemy_pinned(){
+    return m_prev_enemy_pinned;
+}

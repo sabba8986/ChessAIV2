@@ -67,7 +67,7 @@ public:
     BoardState get_board_state();
 
     std::string layout() const;
-    void assert_valid() const;
+    void assert_valid();
     void populate_perft(int depth, PerftResults& stats);
     friend struct BoardState;
 };

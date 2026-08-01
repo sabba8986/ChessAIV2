@@ -8,5 +8,6 @@ backend/board/test.sh
 backend/board/test
 backend/board/main.cpp
 backend/board/perf.data
+backend/board/results.txt
 .cache/
 ChessAITrusted/

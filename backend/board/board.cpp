@@ -59,7 +59,7 @@ void Board::move_piece(int src, int dest){
     std::uint64_t move_mask = (1ull << src) | dest_mask;
     bitboards[attacker] ^= move_mask;
     pieces[src] = Piece::EMPTY;
-    all_pieces[turn] ^= move_mask;
+    //all_pieces[turn] ^= move_mask;
     if(captured != Piece::EMPTY){
         bitboards[captured] ^= dest_mask;
         all_pieces[other_color(turn)] ^= dest_mask;
@@ -87,8 +87,8 @@ void Board::promote(int sq, PieceType p){
     Piece promoted_piece = to_piece(get_color(pawn), p);
     bitboards[pawn] ^= pos;
     bitboards[promoted_piece] ^= pos;
-    all_pieces[turn] ^= pos;
-    all_pieces[other_color(turn)] ^= pos;
+    //all_pieces[turn] ^= pos;
+    //all_pieces[other_color(turn)] ^= pos;
     pieces[sq] = promoted_piece;
 }
 
@@ -99,7 +99,7 @@ void Board::do_en_passant(int en_passant_sq){
     int captured_piece_sq = turn == Color::WHITE ? en_passant_sq - 8 : en_passant_sq + 8;
     std::uint64_t captured_mask = 1ull << captured_piece_sq;
     bitboards[pawn] ^= captured_mask;
-    all_pieces[enemy_color] ^= captured_mask;
+    //all_pieces[enemy_color] ^= captured_mask;
     pieces[captured_piece_sq] = Piece::EMPTY;
 }
 
@@ -132,6 +132,7 @@ void Board::make_move(Move move){
         en_passant_sq = 0;
     }
     turn = enemy_color;
+    recalculate_all_pieces();
     recalculate_pinned(enemy_color);
     assert_valid();
 }
@@ -165,7 +166,7 @@ void Board::undo_castle(int src, int dest){
         bitboards[to_piece(turn, PieceType::ROOK)] ^= ((1ull << dest) | (1ull << (src + 1)));
         pieces[src + 2] = Piece::EMPTY;
         pieces[src + 1] = Piece::EMPTY;
-        all_pieces[turn] ^= (turn == Color::WHITE ? white_left_all_mask : black_left_all_mask);
+        //all_pieces[turn] ^= (turn == Color::WHITE ? white_left_all_mask : black_left_all_mask);
     }
     else{
         pieces[src] = pieces[src - 2];
@@ -174,7 +175,7 @@ void Board::undo_castle(int src, int dest){
         bitboards[to_piece(turn, PieceType::ROOK)] ^= ((1ull << dest) | (1ull << (src - 1)));
         pieces[src - 2] = Piece::EMPTY;
         pieces[src - 1] = Piece::EMPTY;
-        all_pieces[turn] ^= (turn == Color::WHITE ? white_right_all_mask : black_right_all_mask);
+        //all_pieces[turn] ^= (turn == Color::WHITE ? white_right_all_mask : black_right_all_mask);
     }
 }
 
@@ -186,12 +187,12 @@ void Board::undo_move_piece(int src, int dest, PieceType captured_piece_type){
     bitboards[attacker] ^= move_mask;
     pieces[src] = pieces[dest];
     pieces[dest] = Piece::EMPTY;
-    all_pieces[turn] ^= move_mask;
+    //all_pieces[turn] ^= move_mask;
     if(captured_piece_type != PieceType::EMPTY){
         Color defender_color = other_color(turn);
         bitboards[to_piece(defender_color, captured_piece_type)] |= dest_mask;
         pieces[dest] = to_piece(defender_color, captured_piece_type);
-        all_pieces[defender_color] ^= dest_mask;
+        //all_pieces[defender_color] ^= dest_mask;
     }
 }
 
@@ -203,8 +204,8 @@ void Board::undo_promote(int sq){
     bitboards[pawn] ^= pos;
     bitboards[promoted_piece] ^= pos;
     pieces[sq] = pawn;
-    all_pieces[turn] ^= pos;
-    all_pieces[other_color(turn)] ^= pos;
+    //all_pieces[turn] ^= pos;
+    //all_pieces[other_color(turn)] ^= pos;
 }
 
 
@@ -214,7 +215,7 @@ void Board::undo_en_passant(int en_passant_sq){
     int captured_piece_sq = turn == Color::WHITE ? en_passant_sq - 8 : en_passant_sq + 8;
     std::uint64_t captured_mask = (1ull << captured_piece_sq);
     bitboards[captured_piece] ^= captured_mask;
-    all_pieces[captured_color] ^= captured_mask;
+    //all_pieces[captured_color] ^= captured_mask;
     pieces[captured_piece_sq] = captured_piece;
 }
 
@@ -244,6 +245,7 @@ void Board::undo_last_move(){
     castle_rights = undo_info.castle_rights();
     pinned = undo_info.prev_enemy_pinned();
     clock = undo_info.clock();
+    recalculate_all_pieces();
     assert_valid();
 }
 

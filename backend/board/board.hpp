@@ -80,8 +80,8 @@ void Board::recalculate_pinned(){
     int king_sq = get_king_pos(c);
     pinned = 0;
     std::uint64_t enemy_queens = bitboards[to_piece(enemy_color, PieceType::QUEEN)];
-    std::uint64_t diagonal_attackers = bitboards[to_piece(enemy_color, PieceType::BISHOP)] | enemy_queens;
-    std::uint64_t straight_attackers = bitboards[to_piece(enemy_color, PieceType::ROOK)] | enemy_queens;
+    std::uint64_t diagonal_attackers = (bitboards[to_piece(enemy_color, PieceType::BISHOP)] | enemy_queens) & diagonal_mask[king_sq];
+    std::uint64_t straight_attackers = (bitboards[to_piece(enemy_color, PieceType::ROOK)] | enemy_queens) & straight_mask[king_sq];
     std::uint64_t all_occ = all_pieces[Color::WHITE] | all_pieces[Color::BLACK];
     while(diagonal_attackers){
         int pinner_sq = std::countr_zero(diagonal_attackers);

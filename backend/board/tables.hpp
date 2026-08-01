@@ -184,6 +184,28 @@ namespace tables{
 
 
     namespace pins{
+        constexpr auto diagonal_mask = [](){
+            using namespace bitboard;
+            std::array<std::uint64_t, 64> table{};
+            int i = 0;
+            for(std::uint64_t pos = 1; pos; pos <<= 1){
+                table[i] = ray<NE>(pos) | ray<NW>(pos) | ray<SE>(pos) | ray<SW>(pos);
+                i++;
+            }
+            return table;
+        }();
+
+        constexpr auto straight_mask = [](){
+            using namespace bitboard;
+            std::array<std::uint64_t, 64> table{};
+            int i = 0;
+            for(std::uint64_t pos = 1; pos; pos <<= 1){
+                table[i] = ray<N>(pos) | ray<S>(pos) | ray<E>(pos) | ray<W>(pos);
+                i++;
+            }
+            return table;
+        }();
+
         constexpr auto between = [](){
             using namespace bitboard;
             std::array<std::array<std::uint64_t, 64>, 64> table{};

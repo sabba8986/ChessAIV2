@@ -121,14 +121,26 @@ void Board::make_move(Move move){
             do_en_passant(en_passant_sq);
         }
     }
-    if(moved == Piece::WHITE_PAWN && (dest - src == 16)){
-        en_passant_sq = src + 8;
+    if(moved == Piece::WHITE_PAWN){
+        clock = 0;
+        if(dest - src == 16){
+            en_passant_sq = src + 8;
+        }
     }
-    else if(moved == Piece::BLACK_PAWN && (src - dest == 16)){
-        en_passant_sq = dest + 8;
+    else if(moved == Piece::BLACK_PAWN){
+        clock = 0;
+        if(src - dest == 16){
+            en_passant_sq = dest + 8;
+        }
     }
     else{
         en_passant_sq = 0;
+        if(move.is_capture()){
+            clock = 0;
+        }
+        else{
+            clock++;
+        }
     }
     turn = enemy_color;
     recalculate_all_pieces();

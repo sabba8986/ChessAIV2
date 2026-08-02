@@ -2,9 +2,23 @@
 #include "board.hpp"
 
 BoardState::BoardState(Board& board): m_pieces{board.pieces.to_array()}, m_in_check{{board.in_check(Color::WHITE), board.in_check(Color::BLACK)}}{
+    bool no_legal_moves = true;
     for(int sq = 0; sq < 64; sq++){
-       m_move_lists[sq] = board.get_legal_moves(sq);
+        m_move_lists[sq] = board.get_legal_moves(sq);
+        if((get_color(m_pieces[sq]) == board.turn) && (m_move_lists[sq].size() != 0)){
+            no_legal_moves = false;
+        }
     }
+    if(no_legal_moves){
+        m_game_state = board.turn_color_in_check() ? GameState::CHECKMATE : GameState::STALEMATE;
+    }
+    else if(board.clock == 100){
+        m_game_state = GameState::DRAW_HUNDRED_MOVE_CLOCK;
+    }
+    else{
+        m_game_state = GameState::ONGOING;
+    }
+
 }
 
 
@@ -20,4 +34,8 @@ MoveList BoardState::move_list(int sq){
 
 Piece BoardState::piece(int sq){
     return m_pieces[sq];
+}
+
+GameState BoardState::game_state(){
+    return m_game_state;
 }

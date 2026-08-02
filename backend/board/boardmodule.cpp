@@ -48,6 +48,14 @@ PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
         [](Piece self){return get_type(self);}, 
         py::is_method(piece_enum)
     );
+    py::native_enum<GameState>(m, "GameState", "enum.IntEnum")
+        .value("ONGOING", GameState::ONGOING)
+        .value("CHECKMATE", GameState::CHECKMATE)
+        .value("STALEMATE", GameState::STALEMATE)
+        .value("DRAW_HUNDRED_MOVE_CLOCK", GameState::DRAW_HUNDRED_MOVE_CLOCK)
+        .value("DRAW_LACK_MATERIAL", GameState::DRAW_LACK_MATERIAL)
+        .value("DRAW_REPEATED_POSITION", GameState::DRAW_REPEATED_POSITION)
+        .finalize();
     py::class_<Move>(m, "Move")
         .def(py::init<Move>())
         .def("src", &Move::src)
@@ -64,7 +72,8 @@ PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
     py::class_<BoardState>(m, "BoardState")
         .def("in_check", &BoardState::in_check)
         .def("move_list", &BoardState::move_list)
-        .def("piece", &BoardState::piece);
+        .def("piece", &BoardState::piece)
+        .def("game_state", &BoardState::game_state);
     m.def("reset", [](){current_board.reset();}, "Resets the state of the board");
     m.def("get_board_state", [](){return current_board.get_board_state();}, "Get the current state of the board");
     m.def("make_move", [](Move move){current_board.make_move(move);}, "Execute the specified move on the board");

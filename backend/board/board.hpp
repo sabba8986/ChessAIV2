@@ -14,16 +14,13 @@
 #include "perft_results.hpp"
 #include "pch.hpp"
 
-
 class Board{
     static constexpr std::uint8_t white_left_castle_allowed_flag = 1;
     static constexpr std::uint8_t white_right_castle_allowed_flag = 2;
     static constexpr std::uint8_t black_left_castle_allowed_flag = 4;
     static constexpr std::uint8_t black_right_castle_allowed_flag = 8;
     
-    //bitboards for each color ({WHITE, BLACK}). Pieces are in the order of: 
-    //{Pawn, Rook, Knight, Bishop, Queen, King, Empty}
-    EnumArr<std::uint64_t, 14> bitboards;
+    EnumArr<std::uint64_t, 15> bitboards;
     EnumArr<std::uint64_t, 2> all_pieces;
     EnumArr<Piece, 64> pieces;
     std::uint64_t pinned;

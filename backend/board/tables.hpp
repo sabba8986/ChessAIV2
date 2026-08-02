@@ -285,9 +285,9 @@ namespace tables{
             return pieces;
         }();
 
-        inline constexpr EnumArr<std::uint64_t, 14> bitboards_init = [](){
+        inline constexpr auto bitboards_init = [](){
             int sq = 0;
-            EnumArr<std::uint64_t, 14> bitboards{};
+            EnumArr<std::uint64_t, 15> bitboards{};
             for(std::uint64_t trav = 1; trav; trav <<= 1){
                 bitboards[pieces_init[sq]] |= 1ull << sq;
                 sq++;
@@ -295,7 +295,7 @@ namespace tables{
             return bitboards;
         }();
 
-        inline constexpr EnumArr<std::uint64_t, 2> all_pieces_init = [](){
+        inline constexpr auto all_pieces_init = [](){
             EnumArr<std::uint64_t, 2> all_pieces{};
             EnumArr<Color, 2> colors{{Color::WHITE, Color::BLACK}};
             std::array<PieceType, 6> types{PieceType::PAWN, PieceType::ROOK, PieceType::KNIGHT, PieceType::BISHOP, PieceType::QUEEN, PieceType::KING};

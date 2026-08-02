@@ -1,5 +1,4 @@
 #include "board.hpp"
-#include "tables.hpp"
 #include "move.hpp"
 #include "bitboard_moves.hpp"
 #include "undo_move.hpp"

@@ -33,13 +33,13 @@ public:
     template <typename E>
     requires std::is_enum_v<E>
     constexpr T& operator[](E i){
-        return data[to_int(i)];
+        return data[to_idx(i)];
     }
 
     template <typename E>
     requires std::is_enum_v<E>
     constexpr const T& operator[](E i) const{
-        return data[to_int(i)];
+        return data[to_idx(i)];
     }
 
     constexpr iterator begin(){ return data.begin();}

@@ -1,5 +1,5 @@
 #include "bitboard_moves.hpp"
-#include "tables.hpp"
+#include "pch.hpp"
 
 
 std::uint64_t bitboard_moves::pawn_captures(int sq, Color c, std::uint64_t enemies){

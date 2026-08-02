@@ -12,7 +12,7 @@
 #include <bit>
 #include "board_state.hpp"
 #include "perft_results.hpp"
-#include "tables.hpp"
+#include "pch.hpp"
 
 
 class Board{

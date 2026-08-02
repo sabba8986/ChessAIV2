@@ -16,7 +16,7 @@ namespace tables{
             std::uint32_t offset;
         };
 
-        constexpr std::array<MagicInfo, 64> rook = { 
+        inline constexpr std::array<MagicInfo, 64> rook = { 
             {{282578800148862ull, 14447547675473690624ull, 52, 0ul}, {565157600297596ull, 306249241446056256ull, 53, 4096ul}, 
                 {1130315200595066ull, 1224988723672776784ull, 53, 6144ul}, {2260630401190006ull, 72067627886903300ull, 53, 8192ul}, 
                 {4521260802379886ull, 216177214536811088ull, 53, 10240ul}, {9042521604759646ull, 9943965669345329160ull, 53, 12288ul}, 
@@ -51,7 +51,7 @@ namespace tables{
                 {4485655873561051136ull, 433190006371140769ull, 53, 96256ul}, {9115426935197958144ull, 2359904347225129990ull, 52, 98304ul}}
         }; 
 
-        constexpr std::array<MagicInfo, 64> bishop = {
+        inline constexpr std::array<MagicInfo, 64> bishop = {
             {{18049651735527936ull, 11909918676289568ull, 58, 0}, {70506452091904ull, 9225661324384805888ull, 59, 64}, 
                 {275415828992ull, 10379750431860459657ull, 59, 96}, {1075975168ull, 9809970297108562209ull, 59, 128}, 
                 {38021120ull, 578791991833464976ull, 59, 160}, {8657588224ull, 19704416735134080ull, 59, 192}, 
@@ -141,7 +141,7 @@ namespace tables{
         template<>
         constexpr std::array<std::uint64_t, size(PieceType::KNIGHT)> populate_table<PieceType::KNIGHT>(){
             using namespace bitboard;
-            std::array<std::uint64_t, 8> direction_valid = {
+            constexpr std::array<std::uint64_t, 8> direction_valid = {
                 18229723555195321344ull,
                 71209857637481724ull,
                 280371153272574ull, 
@@ -176,15 +176,15 @@ namespace tables{
             return table;
         }
 
-        constexpr std::array<std::uint64_t, size(PieceType::ROOK)> rook = populate_table<PieceType::ROOK>();
-        constexpr std::array<std::uint64_t, size(PieceType::BISHOP)> bishop = populate_table<PieceType::BISHOP>();
-        constexpr std::array<std::uint64_t, size(PieceType::KNIGHT)> knight = populate_table<PieceType::KNIGHT>();
-        constexpr std::array<std::uint64_t, size(PieceType::KING)> king = populate_table<PieceType::KING>();
+        inline constexpr std::array<std::uint64_t, size(PieceType::ROOK)> rook = populate_table<PieceType::ROOK>();
+        inline constexpr std::array<std::uint64_t, size(PieceType::BISHOP)> bishop = populate_table<PieceType::BISHOP>();
+        inline constexpr std::array<std::uint64_t, size(PieceType::KNIGHT)> knight = populate_table<PieceType::KNIGHT>();
+        inline constexpr std::array<std::uint64_t, size(PieceType::KING)> king = populate_table<PieceType::KING>();
     }
 
 
     namespace pins{
-        constexpr auto diagonal_mask = [](){
+        inline constexpr auto diagonal_mask = [](){
             using namespace bitboard;
             std::array<std::uint64_t, 64> table{};
             int i = 0;
@@ -195,7 +195,7 @@ namespace tables{
             return table;
         }();
 
-        constexpr auto straight_mask = [](){
+        inline constexpr auto straight_mask = [](){
             using namespace bitboard;
             std::array<std::uint64_t, 64> table{};
             int i = 0;
@@ -206,7 +206,7 @@ namespace tables{
             return table;
         }();
 
-        constexpr auto between = [](){
+        inline constexpr auto between = [](){
             using namespace bitboard;
             std::array<std::array<std::uint64_t, 64>, 64> table{};
             for(int i = 0; i < 64; i++){
@@ -243,10 +243,10 @@ namespace tables{
             return table;
         }
 
-        constexpr auto diagonal_between = populate_select_between<PieceType::BISHOP>();
-        constexpr auto straight_between = populate_select_between<PieceType::ROOK>();
+        inline constexpr auto diagonal_between = populate_select_between<PieceType::BISHOP>();
+        inline constexpr auto straight_between = populate_select_between<PieceType::ROOK>();
 
-        constexpr auto pin_rays = [](){
+        inline constexpr auto pin_rays = [](){
             using namespace bitboard;
             std::array<std::array<std::uint64_t, 64>, 64> table{};
             const auto dirs = get_directions(PieceType::QUEEN);
@@ -266,7 +266,7 @@ namespace tables{
 
 
     namespace defaults{
-        constexpr EnumArr<Piece, 64> pieces_init = [](){ 
+        inline constexpr EnumArr<Piece, 64> pieces_init = [](){ 
             EnumArr<Piece, 64> pieces{};
             pieces[0] = pieces[7] = Piece::WHITE_ROOK;
             pieces[1] = pieces[6] = Piece::WHITE_KNIGHT;
@@ -285,7 +285,7 @@ namespace tables{
             return pieces;
         }();
 
-        constexpr EnumArr<std::uint64_t, 14> bitboards_init = [](){
+        inline constexpr EnumArr<std::uint64_t, 14> bitboards_init = [](){
             int sq = 0;
             EnumArr<std::uint64_t, 14> bitboards{};
             for(std::uint64_t trav = 1; trav; trav <<= 1){
@@ -295,7 +295,7 @@ namespace tables{
             return bitboards;
         }();
 
-        constexpr EnumArr<std::uint64_t, 2> all_pieces_init = [](){
+        inline constexpr EnumArr<std::uint64_t, 2> all_pieces_init = [](){
             EnumArr<std::uint64_t, 2> all_pieces{};
             EnumArr<Color, 2> colors{{Color::WHITE, Color::BLACK}};
             std::array<PieceType, 6> types{PieceType::PAWN, PieceType::ROOK, PieceType::KNIGHT, PieceType::BISHOP, PieceType::QUEEN, PieceType::KING};

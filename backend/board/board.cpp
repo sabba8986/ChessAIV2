@@ -329,8 +329,9 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
     Color ally_color = get_color(piece);
     Color enemy_color = other_color(ally_color);
     PieceType ally_type = get_type(piece);
+    std::uint64_t checkers = get_checkers(ally_color);
     //cannot block a double check with a non-king piece
-    if(piece == Piece::EMPTY || (std::popcount(get_checkers(ally_color)) == 2 && ally_type != PieceType::KING)){
+    if(piece == Piece::EMPTY || (std::popcount(checkers) == 2 && ally_type != PieceType::KING)){
         return 0;
     }
     std::uint64_t attacks = get_quiets_and_captures(sq);
@@ -341,7 +342,7 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
         while(attacks){
             int dest = std::countr_zero(attacks);
             std::uint64_t dest_mask = 1ull << dest;
-            if(get_attackers(dest) == 0){
+            if(!is_attacked(dest)){
                 legal_moves |= dest_mask;
             }
             attacks ^= dest_mask;
@@ -353,7 +354,6 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
     else{
         //if this point reached, piece is not king and there is at most one checker
         using namespace tables::pins;
-        std::uint64_t checkers = get_checkers(ally_color);
         bool is_checked = (checkers != 0);
         int king_sq = get_king_pos(ally_color);
         bool is_pinned = (pinned & (1ull << sq));
@@ -381,7 +381,7 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
 
 std::uint64_t Board::get_castle_moves(Color c){
     std::uint64_t moves = 0;
-    if(get_checkers(c) != 0) return moves;
+    if(in_check(c)) return moves;
     std::uint64_t occ = all_pieces[Color::WHITE] | all_pieces[Color::BLACK];
     if(c == Color::WHITE){
         constexpr std::uint64_t white_left_castle_mask = (1ull << 4) | (1ull << 5) | (1ull << 6);

@@ -144,17 +144,41 @@ void Board::recalculate_all_pieces(){
 }
 
 
-std::uint64_t Board::get_attackers(int sq, Color attacker_color) const{
-    Color ally_color = other_color(attacker_color);
-    std::uint64_t allies = all_pieces[ally_color];
-    std::uint64_t enemies = all_pieces[attacker_color];
-    std::uint64_t enemy_queen = bitboards[to_piece(attacker_color, PieceType::QUEEN)];
+std::uint64_t Board::get_attackers(int sq) const{
+    Color enemy_color = other_color(turn);
+    std::uint64_t allies = all_pieces[turn];
+    std::uint64_t enemies = all_pieces[enemy_color];
+    std::uint64_t enemy_queen = bitboards[to_piece(enemy_color, PieceType::QUEEN)];
     return 
-        (bitboard_moves::knight(sq, allies, enemies) & bitboards[to_piece(attacker_color, PieceType::KNIGHT)]) | 
-        (bitboard_moves::bishop(sq, allies, enemies) & (bitboards[to_piece(attacker_color, PieceType::BISHOP)] | enemy_queen)) | 
-        (bitboard_moves::rook(sq, allies, enemies) & (bitboards[to_piece(attacker_color, PieceType::ROOK)] | enemy_queen)) | 
-        (bitboard_moves::pawn_captures(sq, ally_color, enemies) & bitboards[to_piece(attacker_color, PieceType::PAWN)]) |
-        (bitboard_moves::king(sq, allies, enemies) & bitboards[to_piece(attacker_color, PieceType::KING)]);
+        (bitboard_moves::knight(sq, allies, enemies) & bitboards[to_piece(enemy_color, PieceType::KNIGHT)]) | 
+        (bitboard_moves::bishop(sq, allies, enemies) & (bitboards[to_piece(enemy_color, PieceType::BISHOP)] | enemy_queen)) | 
+        (bitboard_moves::rook(sq, allies, enemies) & (bitboards[to_piece(enemy_color, PieceType::ROOK)] | enemy_queen)) | 
+        (bitboard_moves::pawn_captures(sq, turn, enemies) & bitboards[to_piece(enemy_color, PieceType::PAWN)]) |
+        (bitboard_moves::king(sq, allies, enemies) & bitboards[to_piece(enemy_color, PieceType::KING)]);
+}
+
+
+bool Board::is_attacked(int sq) const{
+    Color enemy_color = other_color(turn);
+    std::uint64_t allies = all_pieces[turn];
+    std::uint64_t enemies = all_pieces[enemy_color];
+    std::uint64_t enemy_queen = bitboards[to_piece(enemy_color, PieceType::QUEEN)];
+    if(bitboard_moves::rook(sq, allies, enemies) & (bitboards[to_piece(enemy_color, PieceType::ROOK)] | enemy_queen)){
+        return true;
+    } 
+    else if(bitboard_moves::bishop(sq, allies, enemies) & (bitboards[to_piece(enemy_color, PieceType::BISHOP)] | enemy_queen)){
+        return true;
+    }
+    else if(bitboard_moves::knight(sq, allies, enemies) & bitboards[to_piece(enemy_color, PieceType::KNIGHT)]){
+        return true;
+    }
+    else if(bitboard_moves::pawn_captures(sq, turn, enemies) & bitboards[to_piece(enemy_color, PieceType::PAWN)]){
+        return true;
+    }
+    else if(bitboard_moves::king(sq, allies, enemies) & bitboards[to_piece(enemy_color, PieceType::KING)]){
+        return true;
+    }
+    return false;
 }
 
 
@@ -251,7 +275,7 @@ void Board::undo_last_move(){
 
 
 std::uint64_t Board::get_checkers(Color c) const{
-    return get_attackers(get_king_pos(c), other_color(c));
+    return get_attackers(get_king_pos(c));
 }
 
 
@@ -317,7 +341,7 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
         while(attacks){
             int dest = std::countr_zero(attacks);
             std::uint64_t dest_mask = 1ull << dest;
-            if(get_attackers(dest, enemy_color) == 0){
+            if(get_attackers(dest) == 0){
                 legal_moves |= dest_mask;
             }
             attacks ^= dest_mask;
@@ -362,20 +386,20 @@ std::uint64_t Board::get_castle_moves(Color c){
     if(c == Color::WHITE){
         constexpr std::uint64_t white_left_castle_mask = (1ull << 4) | (1ull << 5) | (1ull << 6);
         constexpr std::uint64_t white_right_castle_mask = (1ull << 1) | (1ull << 2);
-        if((castle_rights & white_left_castle_allowed_flag) && !(occ & white_left_castle_mask) && !get_attackers(4, Color::BLACK) && !get_attackers(5, Color::BLACK)){
+        if((castle_rights & white_left_castle_allowed_flag) && !(occ & white_left_castle_mask) && !is_attacked(4) && !is_attacked(5)){
             moves |= (1ull << 7);
         }
-        if((castle_rights & white_left_castle_allowed_flag) && !(occ & white_right_castle_mask) && !get_attackers(2, Color::BLACK) && !get_attackers(1, Color::BLACK)){
+        if((castle_rights & white_left_castle_allowed_flag) && !(occ & white_right_castle_mask) && !is_attacked(2) && !is_attacked(1)){
             moves |= 1;
         }
     }
     else{
         constexpr std::uint64_t black_left_castle_mask = (1ull << 60) | (1ull << 61) | (1ull << 62);
         constexpr std::uint64_t black_right_castle_mask = (1ull << 57) | (1ull << 58);
-        if((castle_rights & black_left_castle_allowed_flag) && !(occ & black_left_castle_mask) && !get_attackers(60, Color::WHITE) && !get_attackers(61, Color::WHITE)){
+        if((castle_rights & black_left_castle_allowed_flag) && !(occ & black_left_castle_mask) && !is_attacked(60) && !is_attacked(61)){
             moves |= (1ull << 63);
         }
-        if((castle_rights & black_right_castle_allowed_flag) && !(occ & black_right_castle_mask) && !get_attackers(57, Color::WHITE) && !get_attackers(58, Color::WHITE)){
+        if((castle_rights & black_right_castle_allowed_flag) && !(occ & black_right_castle_mask) && !is_attacked(57) && !is_attacked(58)){
             moves |= (1ull << 56);
         }
     }
@@ -437,7 +461,7 @@ MoveList Board::get_legal_moves(int sq){
 
 
 bool Board::in_check(Color c){
-    return get_checkers(c) != 0;
+    return is_attacked(get_king_pos(c));
 }
 
 

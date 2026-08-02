@@ -45,7 +45,8 @@ class Board{
     void undo_en_passant(int en_passant_sq);
     void recalculate_all_pieces();
     std::uint64_t get_promotion_row(Color c);
-    std::uint64_t get_attackers(int sq, Color attacker_color) const;
+    std::uint64_t get_attackers(int sq) const;
+    bool is_attacked(int sq) const;
     void add_castle_if_legal(Color c, MoveList& list);
     std::uint64_t get_quiets_and_captures(int sq) const;
     std::uint64_t get_legal_quiets_and_captures(int sq);

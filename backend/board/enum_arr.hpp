@@ -49,6 +49,8 @@ public:
     constexpr const_iterator end() const{ return data.cend();}
 
     constexpr std::array<T, N> to_array(){ return data;}
+
+    constexpr void fill(const T& val){ data.fill(val);}
 };
 
 

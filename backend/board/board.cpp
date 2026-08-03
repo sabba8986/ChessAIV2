@@ -155,38 +155,36 @@ void Board::recalculate_all_pieces(){
 }
 
 
-std::uint64_t Board::get_attackers(int sq) const{
-    Color enemy_color = other_color(turn);
+std::uint64_t Board::get_attackers(int sq, Color attacker_color) const{
     std::uint64_t allies = all_pieces[turn];
-    std::uint64_t enemies = all_pieces[enemy_color];
-    std::uint64_t enemy_queen = bitboards[to_piece(enemy_color, PieceType::QUEEN)];
+    std::uint64_t enemies = all_pieces[attacker_color];
+    std::uint64_t enemy_queen = bitboards[to_piece(attacker_color, PieceType::QUEEN)];
     return 
-        (bitboard_moves::knight(sq, allies, enemies) & bitboards[to_piece(enemy_color, PieceType::KNIGHT)]) | 
-        (bitboard_moves::bishop(sq, allies, enemies) & (bitboards[to_piece(enemy_color, PieceType::BISHOP)] | enemy_queen)) | 
-        (bitboard_moves::rook(sq, allies, enemies) & (bitboards[to_piece(enemy_color, PieceType::ROOK)] | enemy_queen)) | 
-        (bitboard_moves::pawn_captures(sq, turn, enemies) & bitboards[to_piece(enemy_color, PieceType::PAWN)]) |
-        (bitboard_moves::king(sq, allies, enemies) & bitboards[to_piece(enemy_color, PieceType::KING)]);
+        (bitboard_moves::knight(sq, allies, enemies) & bitboards[to_piece(attacker_color, PieceType::KNIGHT)]) | 
+        (bitboard_moves::bishop(sq, allies, enemies) & (bitboards[to_piece(attacker_color, PieceType::BISHOP)] | enemy_queen)) | 
+        (bitboard_moves::rook(sq, allies, enemies) & (bitboards[to_piece(attacker_color, PieceType::ROOK)] | enemy_queen)) | 
+        (bitboard_moves::pawn_captures(sq, turn, enemies) & bitboards[to_piece(attacker_color, PieceType::PAWN)]) |
+        (bitboard_moves::king(sq, allies, enemies) & bitboards[to_piece(attacker_color, PieceType::KING)]);
 }
 
 
-bool Board::is_attacked(int sq) const{
-    Color enemy_color = other_color(turn);
+bool Board::is_attacked(int sq, Color attacker_color) const{
     std::uint64_t allies = all_pieces[turn];
-    std::uint64_t enemies = all_pieces[enemy_color];
-    std::uint64_t enemy_queen = bitboards[to_piece(enemy_color, PieceType::QUEEN)];
-    if(bitboard_moves::rook(sq, allies, enemies) & (bitboards[to_piece(enemy_color, PieceType::ROOK)] | enemy_queen)){
+    std::uint64_t enemies = all_pieces[attacker_color];
+    std::uint64_t enemy_queen = bitboards[to_piece(attacker_color, PieceType::QUEEN)];
+    if(bitboard_moves::rook(sq, allies, enemies) & (bitboards[to_piece(attacker_color, PieceType::ROOK)] | enemy_queen)){
         return true;
     } 
-    else if(bitboard_moves::bishop(sq, allies, enemies) & (bitboards[to_piece(enemy_color, PieceType::BISHOP)] | enemy_queen)){
+    else if(bitboard_moves::bishop(sq, allies, enemies) & (bitboards[to_piece(attacker_color, PieceType::BISHOP)] | enemy_queen)){
         return true;
     }
-    else if(bitboard_moves::knight(sq, allies, enemies) & bitboards[to_piece(enemy_color, PieceType::KNIGHT)]){
+    else if(bitboard_moves::knight(sq, allies, enemies) & bitboards[to_piece(attacker_color, PieceType::KNIGHT)]){
         return true;
     }
-    else if(bitboard_moves::pawn_captures(sq, turn, enemies) & bitboards[to_piece(enemy_color, PieceType::PAWN)]){
+    else if(bitboard_moves::pawn_captures(sq, turn, enemies) & bitboards[to_piece(attacker_color, PieceType::PAWN)]){
         return true;
     }
-    else if(bitboard_moves::king(sq, allies, enemies) & bitboards[to_piece(enemy_color, PieceType::KING)]){
+    else if(bitboard_moves::king(sq, allies, enemies) & bitboards[to_piece(attacker_color, PieceType::KING)]){
         return true;
     }
     return false;
@@ -286,7 +284,7 @@ void Board::undo_last_move(){
 
 
 std::uint64_t Board::get_checkers(Color c) const{
-    return get_attackers(get_king_pos(c));
+    return get_attackers(get_king_pos(c), other_color(c));
 }
 
 
@@ -353,7 +351,7 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
         while(attacks){
             int dest = std::countr_zero(attacks);
             std::uint64_t dest_mask = 1ull << dest;
-            if(!is_attacked(dest)){
+            if(!is_attacked(dest, enemy_color)){
                 legal_moves |= dest_mask;
             }
             attacks ^= dest_mask;
@@ -394,23 +392,24 @@ std::uint64_t Board::get_castle_moves(Color c){
     std::uint64_t moves = 0;
     if(in_check(c)) return moves;
     std::uint64_t occ = all_pieces[Color::WHITE] | all_pieces[Color::BLACK];
+    Color enemy_color = other_color(c);
     if(c == Color::WHITE){
         constexpr std::uint64_t white_left_castle_mask = (1ull << 4) | (1ull << 5) | (1ull << 6);
         constexpr std::uint64_t white_right_castle_mask = (1ull << 1) | (1ull << 2);
-        if((castle_rights & white_left_castle_allowed_flag) && !(occ & white_left_castle_mask) && !is_attacked(4) && !is_attacked(5)){
+        if((castle_rights & white_left_castle_allowed_flag) && !(occ & white_left_castle_mask) && !is_attacked(4, enemy_color) && !is_attacked(5, enemy_color)){
             moves |= (1ull << 7);
         }
-        if((castle_rights & white_left_castle_allowed_flag) && !(occ & white_right_castle_mask) && !is_attacked(2) && !is_attacked(1)){
+        if((castle_rights & white_left_castle_allowed_flag) && !(occ & white_right_castle_mask) && !is_attacked(2, enemy_color) && !is_attacked(1, enemy_color)){
             moves |= 1;
         }
     }
     else{
         constexpr std::uint64_t black_left_castle_mask = (1ull << 60) | (1ull << 61) | (1ull << 62);
         constexpr std::uint64_t black_right_castle_mask = (1ull << 57) | (1ull << 58);
-        if((castle_rights & black_left_castle_allowed_flag) && !(occ & black_left_castle_mask) && !is_attacked(60) && !is_attacked(61)){
+        if((castle_rights & black_left_castle_allowed_flag) && !(occ & black_left_castle_mask) && !is_attacked(60, enemy_color) && !is_attacked(61, enemy_color)){
             moves |= (1ull << 63);
         }
-        if((castle_rights & black_right_castle_allowed_flag) && !(occ & black_right_castle_mask) && !is_attacked(57) && !is_attacked(58)){
+        if((castle_rights & black_right_castle_allowed_flag) && !(occ & black_right_castle_mask) && !is_attacked(57, enemy_color) && !is_attacked(58, enemy_color)){
             moves |= (1ull << 56);
         }
     }
@@ -472,7 +471,7 @@ MoveList Board::get_legal_moves(int sq){
 
 
 bool Board::in_check(Color c){
-    return is_attacked(get_king_pos(c));
+    return is_attacked(get_king_pos(c), other_color(c));
 }
 
 
@@ -485,43 +484,31 @@ std::string Board::layout() const{
     for(int i = 63; i > -1; i--){
         switch(pieces[i]){
             case Piece::WHITE_PAWN:
-                layout.push_back('P');
-                break;
+                layout += "\u2659 "; break;
             case Piece::WHITE_ROOK:
-                layout.push_back('R');
-                break;
+                layout += "\u2656 "; break;
             case Piece::WHITE_KNIGHT:
-                layout.push_back('N');
-                break;
+                layout += "\u2658 "; break;
             case Piece::WHITE_BISHOP:
-                layout.push_back('B');
-                break;
+                layout += "\u2657 "; break;
             case Piece::WHITE_KING:
-                layout.push_back('K');
-                break;
+                layout += "\u2654 "; break;
             case Piece::WHITE_QUEEN:
-                layout.push_back('Q');
-                break;
+                layout += "\u2655 "; break;
             case Piece::BLACK_PAWN:
-                layout.push_back('p');
-                break;
+                layout += "\u265F "; break;
             case Piece::BLACK_ROOK:
-                layout.push_back('r');
-                break;
+                layout += "\u265C "; break;
             case Piece::BLACK_KNIGHT:
-                layout.push_back('n');
-                break;
+                layout += "\u265E "; break;
             case Piece::BLACK_BISHOP:
-                layout.push_back('b');
-                break;
+                layout += "\u265D "; break;
             case Piece::BLACK_QUEEN:
-                layout.push_back('q');
-                break;
+                layout += "\u265B "; break;
             case Piece::BLACK_KING:
-                layout.push_back('k');
-                break;
+                layout += "\u265A "; break;
             default:
-                layout += "·";
+                layout += "\u00B7 ";
         }
         if(i % 8 == 0){
             layout += "\n";
@@ -592,6 +579,22 @@ void Board::populate_perft(int depth, PerftResults& stats){
             undo_last_move();
         }
     }
+}
+
+
+FENState Board::verify_FEN(const std::string& str){
+
+}
+
+void Board::load_FEN(const std::string& str){
+    bitboards.fill(0);
+    std::uint64_t trav = 1ull << 63;
+    for(int i = 0; i < 64; i++){
+        char c = str[i];
+        switch(c){
+        }
+    }
+
 }
 
 

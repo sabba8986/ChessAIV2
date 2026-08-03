@@ -13,6 +13,8 @@
 #include "board_state.hpp"
 #include "perft_results.hpp"
 #include "pch.hpp"
+#include <string>
+#include "fen.hpp"
 
 class Board{
     static constexpr std::uint8_t white_left_castle_allowed_flag = 1;
@@ -42,8 +44,8 @@ class Board{
     void undo_en_passant(int en_passant_sq);
     void recalculate_all_pieces();
     std::uint64_t get_promotion_row(Color c);
-    std::uint64_t get_attackers(int sq) const;
-    bool is_attacked(int sq) const;
+    std::uint64_t get_attackers(int sq, Color attacker_color) const;
+    bool is_attacked(int sq, Color attacker_color) const;
     void add_castle_if_legal(Color c, MoveList& list);
     std::uint64_t get_quiets_and_captures(int sq) const;
     std::uint64_t get_legal_quiets_and_captures(int sq);
@@ -53,6 +55,9 @@ class Board{
 
     template<Color c> 
     void recalculate_pinned();
+
+    FENState verify_FEN(const std::string& str);
+    
 public:
     Board();
     int get_king_pos(Color c) const;
@@ -67,6 +72,7 @@ public:
     std::string layout() const;
     void assert_valid();
     void populate_perft(int depth, PerftResults& stats);
+    void load_FEN(const std::string& str);
     friend struct BoardState;
 };
 

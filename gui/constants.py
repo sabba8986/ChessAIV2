@@ -35,6 +35,7 @@ PIECE_PATHS: list[str] = [
     str(iconsDir / "white_queen.svg"),
     str(iconsDir / "white_king.svg"), 
     "", 
+    "",
     str(iconsDir / "black_pawn.svg"),
     str(iconsDir / "black_rook.svg"),
     str(iconsDir / "black_knight.svg"),
@@ -44,7 +45,7 @@ PIECE_PATHS: list[str] = [
 ]
 
 
-PIECE_RENDERERS: list[QSvgRenderer] = [QSvgRenderer()] * 14
+PIECE_RENDERERS: list[QSvgRenderer] = [QSvgRenderer()] * 15
 def initializePieceRenderers():
     for piece in Piece: 
         if piece != Piece.EMPTY:

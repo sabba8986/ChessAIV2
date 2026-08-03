@@ -18,7 +18,7 @@ class BoardWidget(QWidget):
         board.reset()
         self.boardState: BoardState = board.get_board_state()
         self.boardPixmap: QPixmap = QPixmap()
-        self.piecePixmaps: list[QPixmap] = [QPixmap()] * 14
+        self.piecePixmaps: list[QPixmap] = [QPixmap()] * 15
         self.tileLength: int = 0
         self.length: int = 0
         self.selectedSq: int | None = None

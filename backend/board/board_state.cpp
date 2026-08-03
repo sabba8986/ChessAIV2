@@ -5,7 +5,7 @@ BoardState::BoardState(Board& board): m_pieces{board.pieces.to_array()}, m_in_ch
     bool no_legal_moves = true;
     for(int sq = 0; sq < 64; sq++){
         m_move_lists[sq] = board.get_legal_moves(sq);
-        if((get_color(m_pieces[sq]) == board.turn) && (m_move_lists[sq].size() != 0)){
+        if((m_pieces[sq] != Piece::EMPTY) && (get_color(m_pieces[sq]) == board.turn) && (m_move_lists[sq].size() != 0)){
             no_legal_moves = false;
         }
     }

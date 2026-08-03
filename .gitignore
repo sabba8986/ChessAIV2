@@ -1,4 +1,5 @@
 env/
+.venv/
 .clangd
 backend/board_interface.egg-info/
 gui/__pycache__/

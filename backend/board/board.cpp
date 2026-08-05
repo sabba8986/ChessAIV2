@@ -4,8 +4,11 @@
 #include "undo_move.hpp"
 #include "perft_results.hpp"
 #include <bit>
+#include <charconv>
 #include <utility>
 #include <cassert>
+#include <cctype>
+#include <algorithm>
 
 
 namespace{
@@ -13,6 +16,9 @@ namespace{
     inline constexpr std::uint64_t white_left_all_mask = (1ull << 3) | (1ull << 4) | (1ull << 5) | (1ull << 7);
     inline constexpr std::uint64_t black_right_all_mask = (1ull << 56) | (1ull << 57) | (1ull << 58) | (1ull << 59);
     inline constexpr std::uint64_t black_left_all_mask = (1ull << 59) | (1ull << 60) | (1ull << 61) | (1ull << 63);
+    inline const std::string piece_chars = "PRNBQKprnbqk";
+    inline const std::string files = "abcdefgh";
+    inline const std::string ranks = "12345678";
 }
 
 
@@ -525,8 +531,6 @@ void Board::assert_valid(){
     };
     std::uint64_t white_pieces = all_pieces[Color::WHITE];
     std::uint64_t black_pieces = all_pieces[Color::BLACK];
-    recalculate_all_pieces();
-    assert(white_pieces == all_pieces[Color::WHITE] && black_pieces == all_pieces[Color::BLACK]);
     for(int i = 0; i < 64; i++){
         Piece p = pieces[i];
         bool valid = true;
@@ -582,19 +586,179 @@ void Board::populate_perft(int depth, PerftResults& stats){
 }
 
 
-FENState Board::verify_FEN(const std::string& str){
+std::expected<std::array<std::string_view, 6>, FENError> Board::parse_FEN(const std::string& str){
+    std::array<std::string_view, 6> sections;
+    auto not_whitespace = [](unsigned char c){return !std::isspace(c);};
+    auto is_whitespace = [](unsigned char c){return std::isspace(c);};
+    auto start = str.begin();
+    for(int i = 0; i < 6; i++){
+        start = std::find_if(start, str.end(), not_whitespace);
+        if(start == str.end()){
+            return std::unexpected(FENError::MISSING_SECTION);
+        }
+        auto end = std::find_if(start, str.end(), is_whitespace);
+        sections[i] = std::string_view{start, end};
+        start = end;
+    }
+    if(std::find_if(start, str.end(), not_whitespace) != str.end()) return std::unexpected(FENError::EXTRA_SECTION);
 
+    auto board = sections[0];
+    int cur_row_count = 1;
+    int cur_col_count = 0;
+    bool white_king_on_board = false;
+    bool black_king_on_board = false;
+    for(char p: board){
+        if(p == '0') return std::unexpected(FENError::ZERO_IN_BOARD);
+        if(p == '/'){
+            if(cur_col_count != 8){
+                return std::unexpected(FENError::NOT_ENOUGH_COLUMNS);
+            }
+            else{
+                cur_col_count = 0;
+                cur_row_count++;
+            }
+        }
+        else if(std::isdigit(p)){
+            cur_col_count += static_cast<int>(p - '0');
+        }
+        else if(piece_chars.contains(p)){
+            cur_col_count++;
+            if(p == 'K'){
+                if(white_king_on_board) return std::unexpected(FENError::DUPLICATE_KING);
+                else white_king_on_board = true;
+            }
+            else if(p == 'k'){
+                if(black_king_on_board) return std::unexpected(FENError::DUPLICATE_KING);
+                else black_king_on_board = true;
+            }
+        }
+        else return std::unexpected(FENError::INVALID_CHARACTER_IN_ROW);
+    }
+    if(cur_row_count != 8) return std::unexpected(FENError::NOT_ENOUGH_ROWS);
+    else if(cur_row_count != 8) return std::unexpected(FENError::NOT_ENOUGH_COLUMNS);
+    else if(!(white_king_on_board && black_king_on_board)) return std::unexpected(FENError::MISSING_KING);
+
+    auto active_color = sections[1];
+    if(active_color.size() != 1 || (active_color[0] != 'w' && active_color[0] != 'b')) return std::unexpected(FENError::INVALID_ACTIVE_COLOR);
+
+    auto castle_rights = sections[2];
+    bool found_K = false, found_Q = false, found_k = false, found_q = false;
+    for(char c: castle_rights){
+        if(c == 'K'){
+            if(found_K) return std::unexpected(FENError::DUPLICATE_CASTLE_RIGHTS);
+            else found_K = true;
+        }
+        else if(c == 'Q'){
+            if(found_Q) return std::unexpected(FENError::DUPLICATE_CASTLE_RIGHTS);
+            else found_Q = true;
+        }
+        else if(c == 'k'){
+            if(found_k) return std::unexpected(FENError::DUPLICATE_CASTLE_RIGHTS);
+            else found_k = true;
+        }
+        else if(c == 'q'){
+            if(found_q) return std::unexpected(FENError::DUPLICATE_CASTLE_RIGHTS);
+            else found_q = true;
+        }
+        else return std::unexpected(FENError::INVALID_CASTLE_RIGHTS);
+    }
+
+    auto en_passant_sq = sections[3];
+    if(en_passant_sq != "-"){
+        int en_passant_sq_num = 0;
+        auto [ptr1, err1] = std::from_chars(en_passant_sq.data(), en_passant_sq.data() + en_passant_sq.size(), en_passant_sq_num);
+        if(err1 != std::errc{}) return std::unexpected(FENError::INVALID_EN_PASSANT_SQ);
+        else if(en_passant_sq_num < 0 || en_passant_sq_num > 63) return std::unexpected(FENError::EN_PASSANT_SQ_OUT_OF_BOUNDS);
+    }
+
+    auto clock = sections[4];
+    int clock_num = 0;
+    auto [ptr1, err1] = std::from_chars(clock.data(), clock.data() + clock.size(), clock_num);
+    if(err1 != std::errc{} || clock_num < 0) return std::unexpected(FENError::INVALID_HALF_MOVE_CLOCK);
+
+    auto full_moves = sections[4];
+    int moves_num = 0;
+    auto [ptr2, err2] = std::from_chars(full_moves.data(), full_moves.data() + full_moves.size(), moves_num);
+    if(err2 != std::errc{} || moves_num < 0) return std::unexpected(FENError::INVALID_NUM_MOVES);
+
+    return sections;
 }
 
-void Board::load_FEN(const std::string& str){
-    bitboards.fill(0);
+
+std::expected<void, FENError> Board::load_FEN(const std::string& str){
+    auto res = parse_FEN(str);
+    if(!res.has_value()) return std::unexpected(res.error());
+    const auto& sections = res.value();
+    
+    prev_moves = std::stack<History>();
+    auto board_FEN = sections[0];
+    int sq = 63;
     std::uint64_t trav = 1ull << 63;
-    for(int i = 0; i < 64; i++){
-        char c = str[i];
-        switch(c){
+    bitboards.fill(0);
+    pieces.fill(Piece::EMPTY);
+    for(char p: board_FEN){
+        if(p == '/') continue;
+        if(std::isdigit(p)){
+            trav >>= static_cast<int>(p - '0');
+            sq -= static_cast<int>(p - '0');
+            continue;
+        }
+        switch(p){
+            case 'P': bitboards[Piece::WHITE_PAWN] |= trav; pieces[sq] = Piece::WHITE_PAWN; break;
+            case 'R': bitboards[Piece::WHITE_ROOK] |= trav; pieces[sq] = Piece::WHITE_ROOK; break;
+            case 'N': bitboards[Piece::WHITE_KNIGHT] |= trav; pieces[sq] = Piece::WHITE_KNIGHT;  break;
+            case 'B': bitboards[Piece::WHITE_BISHOP] |= trav; pieces[sq] = Piece::WHITE_BISHOP;  break;
+            case 'Q': bitboards[Piece::WHITE_QUEEN] |= trav; pieces[sq] = Piece::WHITE_QUEEN;  break;
+            case 'K': bitboards[Piece::WHITE_KING] |= trav; pieces[sq] = Piece::WHITE_KING;  break;
+            case 'p': bitboards[Piece::BLACK_PAWN] |= trav; pieces[sq] = Piece::BLACK_PAWN;  break;
+            case 'r': bitboards[Piece::BLACK_ROOK] |= trav; pieces[sq] = Piece::BLACK_ROOK;  break;
+            case 'n': bitboards[Piece::BLACK_KNIGHT] |= trav; pieces[sq] = Piece::BLACK_KNIGHT;  break;
+            case 'b': bitboards[Piece::BLACK_BISHOP] |= trav; pieces[sq] = Piece::BLACK_BISHOP;  break;
+            case 'q': bitboards[Piece::BLACK_QUEEN] |= trav; pieces[sq] = Piece::BLACK_QUEEN;  break;
+            case 'k': bitboards[Piece::BLACK_KING] |= trav; pieces[sq] = Piece::BLACK_KING;  break;
+            default: break;
+        }
+        trav >>= 1;
+        sq--;
+    }
+    recalculate_all_pieces();
+    assert_valid();
+
+    if(sections[1] == "w"){
+        turn = Color::WHITE;
+        recalculate_pinned<Color::WHITE>();
+    }
+    else{
+        turn = Color::BLACK;
+        recalculate_pinned<Color::BLACK>();
+    }
+
+    castle_rights = 0;
+    for(char castle_right: sections[2]){
+        switch(castle_right){
+            case 'K': castle_rights |= white_right_castle_allowed_flag; break;
+            case 'Q': castle_rights |= white_left_castle_allowed_flag; break;
+            case 'k': castle_rights |= black_right_castle_allowed_flag; break;
+            case 'q': castle_rights |= black_left_castle_allowed_flag; break;
+            default: break;
         }
     }
 
+    auto en_passant_sq_FEN = sections[3];
+    if(en_passant_sq_FEN == "-"){
+        en_passant_sq = 0;
+    }
+    else{
+        std::from_chars(en_passant_sq_FEN.data(), en_passant_sq_FEN.data() + en_passant_sq_FEN.size(), en_passant_sq);
+    }
+
+    auto clock_FEN = sections[4];
+    std::from_chars(clock_FEN.data(), clock_FEN.data() + clock_FEN.size(), clock);
+
+    auto num_moves_FEN = sections[5];
+    std::from_chars(num_moves_FEN.data(), num_moves_FEN.data() + num_moves_FEN.size(), num_moves);
+
+    return {};
 }
 
 
@@ -608,4 +772,5 @@ void Board::reset(){
     clock = 0;
     turn = Color::WHITE;
     pinned = 0;
+    num_moves = 0; //currently unused
 }

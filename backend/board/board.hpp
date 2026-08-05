@@ -14,7 +14,8 @@
 #include "perft_results.hpp"
 #include "pch.hpp"
 #include <string>
-#include "fen.hpp"
+#include "fen_error.hpp"
+#include <expected>
 
 class Board{
     static constexpr std::uint8_t white_left_castle_allowed_flag = 1;
@@ -31,6 +32,7 @@ class Board{
     std::uint8_t castle_rights;
     int clock;
     Color turn;
+    int num_moves;
 
     std::uint64_t get_checkers(Color c) const;
 
@@ -53,10 +55,10 @@ class Board{
     std::uint64_t get_en_passant_row(Color c);
     void recalculate_pinned(Color c);
 
-    template<Color c> 
+    template<Color c>
     void recalculate_pinned();
 
-    FENState verify_FEN(const std::string& str);
+    std::expected<std::array<std::string_view, 6>, FENError> parse_FEN(const std::string& str);
     
 public:
     Board();
@@ -72,7 +74,7 @@ public:
     std::string layout() const;
     void assert_valid();
     void populate_perft(int depth, PerftResults& stats);
-    void load_FEN(const std::string& str);
+    std::expected<void, FENError> load_FEN(const std::string& str);
     friend struct BoardState;
 };
 

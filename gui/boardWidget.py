@@ -16,6 +16,8 @@ class BoardWidget(QWidget):
     def __init__(self, parent = None):
         super().__init__(parent)
         board.reset()
+
+        board.loadFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 0");
         self.boardState: BoardState = board.get_board_state()
         self.boardPixmap: QPixmap = QPixmap()
         self.piecePixmaps: list[QPixmap] = [QPixmap()] * 15

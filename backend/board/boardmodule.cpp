@@ -2,6 +2,10 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/native_enum.h>
 #include <pybind11/pytypes.h>
+#include <expected>
+#include "fen_error.hpp"
+#include <iostream>
+
 
 namespace py = pybind11;
 
@@ -80,4 +84,8 @@ PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
     m.def("undo_last_move", [](){current_board.undo_last_move();}, "Undoes the last move on the board");
     m.def("in_check", [](Color c){return current_board.in_check(c);}, "Returns whether the king of the specified color is in check");
     m.def("layout", [](){return current_board.layout();}, "Gets the layout of the board as a prettified FEN string");
+    m.def("loadFEN", [](const std::string& str){
+        auto status = current_board.load_FEN(str);
+        if(!status.has_value()) std::cerr << "FEN Parsing Error: " << string_rep(status.error()) << std::endl;
+    }, "Loads the specified FEN string into the board. If the FEN string is invalid, prints the resulting parsing error.");
 }

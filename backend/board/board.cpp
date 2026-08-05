@@ -405,7 +405,7 @@ std::uint64_t Board::get_castle_moves(Color c){
         if((castle_rights & white_left_castle_allowed_flag) && !(occ & white_left_castle_mask) && !is_attacked(4, enemy_color) && !is_attacked(5, enemy_color)){
             moves |= (1ull << 7);
         }
-        if((castle_rights & white_left_castle_allowed_flag) && !(occ & white_right_castle_mask) && !is_attacked(2, enemy_color) && !is_attacked(1, enemy_color)){
+        if((castle_rights & white_right_castle_allowed_flag) && !(occ & white_right_castle_mask) && !is_attacked(2, enemy_color) && !is_attacked(1, enemy_color)){
             moves |= 1;
         }
     }

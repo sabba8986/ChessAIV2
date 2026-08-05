@@ -5,6 +5,7 @@
 Move::Move(int src, int dest, std::uint16_t flags, PieceType promoted_type):
     move(src | (dest << 6) | flags | (flags & promotion_flag ? (static_cast<std::uint16_t>(promoted_type) - 2) << 14 : 0)){}
 
+Move::Move(std::uint16_t move): move{move}{}
 
 int Move::src(){
     return move & src_mask;

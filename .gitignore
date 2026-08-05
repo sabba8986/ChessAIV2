@@ -1,10 +1,16 @@
 env/
+.venv/
 .clangd
 backend/board_interface.egg-info/
 gui/__pycache__/
 .vscode/
 build/
 backend/board/test.sh
+backend/board/perf.sh
 backend/board/test
 backend/board/main.cpp
+backend/board/perf.data
+backend/board/pch.hpp.gch
+backend/board/results.txt
 .cache/
+ChessAITrusted/

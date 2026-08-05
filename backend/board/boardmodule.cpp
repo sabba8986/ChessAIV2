@@ -2,6 +2,10 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/native_enum.h>
 #include <pybind11/pytypes.h>
+#include <expected>
+#include "fen_error.hpp"
+#include <iostream>
+
 
 namespace py = pybind11;
 
@@ -48,6 +52,14 @@ PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
         [](Piece self){return get_type(self);}, 
         py::is_method(piece_enum)
     );
+    py::native_enum<GameState>(m, "GameState", "enum.IntEnum")
+        .value("ONGOING", GameState::ONGOING)
+        .value("CHECKMATE", GameState::CHECKMATE)
+        .value("STALEMATE", GameState::STALEMATE)
+        .value("DRAW_HUNDRED_MOVE_CLOCK", GameState::DRAW_HUNDRED_MOVE_CLOCK)
+        .value("DRAW_LACK_MATERIAL", GameState::DRAW_LACK_MATERIAL)
+        .value("DRAW_REPEATED_POSITION", GameState::DRAW_REPEATED_POSITION)
+        .finalize();
     py::class_<Move>(m, "Move")
         .def(py::init<Move>())
         .def("src", &Move::src)
@@ -64,11 +76,28 @@ PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
     py::class_<BoardState>(m, "BoardState")
         .def("in_check", &BoardState::in_check)
         .def("move_list", &BoardState::move_list)
-        .def("piece", &BoardState::piece);
+        .def("piece", &BoardState::piece)
+        .def("game_state", &BoardState::game_state);
     m.def("reset", [](){current_board.reset();}, "Resets the state of the board");
     m.def("get_board_state", [](){return current_board.get_board_state();}, "Get the current state of the board");
-    m.def("make_move", [](Move move){current_board.make_move(move);}, "Execute the specified move on the board");
-    m.def("undo_last_move", [](){current_board.undo_last_move();}, "Undoes the last move on the board");
+    m.def("make_move", [](Move move){
+        current_board.make_move(move);
+        if(current_board.get_cur_ply() > Board::get_max_plys()){
+            std::cerr << "WARNING: Move stack is full, undo move operation will now be disabled for the rest of the game" << std::endl;
+        }}, "Execute the specified move on the board, printing a warning if the move stack has reached capacity");
+    m.def("undo_last_move", [](){
+        if(current_board.get_cur_ply() == 0){
+            std::cerr << "ERROR: Empty move stack, aborting undo move operation" << std::endl;
+        } 
+        else if(current_board.get_cur_ply() > Board::get_max_plys()){
+            std::cerr << "ERROR: Move stack stopped tracking moves after ply" << Board::get_max_plys() << ", aborting undo move operation" << std::endl;
+        }
+        current_board.undo_last_move();
+    }, "Undoes the last move on the board, printing an error if the undo operation cannot be fulfilled.");
     m.def("in_check", [](Color c){return current_board.in_check(c);}, "Returns whether the king of the specified color is in check");
     m.def("layout", [](){return current_board.layout();}, "Gets the layout of the board as a prettified FEN string");
+    m.def("loadFEN", [](const std::string& str){
+        auto status = current_board.load_FEN(str);
+        if(!status.has_value()) std::cerr << "FEN Parsing Error: " << string_rep(status.error()) << std::endl;
+    }, "Loads the specified FEN string into the board. If the FEN string is invalid, prints the resulting parsing error.");
 }

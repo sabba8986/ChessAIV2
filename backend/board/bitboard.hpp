@@ -27,7 +27,6 @@ namespace bitboard{
     };
 
 
-
     constexpr std::uint64_t up_edge{18374686479671623680ull};
     constexpr std::uint64_t down_edge{255};
     constexpr std::uint64_t right_edge{72340172838076673ull}; 
@@ -119,6 +118,7 @@ namespace bitboard{
             case PieceType::ROOK: return {N, E, S, W};
             case PieceType::BISHOP: return {NE, SE, SW, NW};
             case PieceType::KING: return {N, NE, E, SE, S, SW, W, NW};
+            case PieceType::QUEEN: return {N, NE, E, SE, S, SW, W, NW};
             case PieceType::KNIGHT: return {K1, K2, K3, K4, K5, K6, K7, K8};
             default: return {};
         } 
@@ -152,7 +152,6 @@ namespace bitboard{
         }
         return result;
     }
-
 };
 
 #endif

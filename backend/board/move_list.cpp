@@ -1,7 +1,7 @@
 #include "move_list.hpp"
+#include <cassert>
 
-
-MoveList::MoveList(): m_num_moves{0}, m_moves{} {}
+MoveList::MoveList(): m_num_moves{0}{}
 
 
 void MoveList::add_move(Move move){
@@ -15,5 +15,6 @@ int MoveList::size(){
 
 
 Move MoveList::operator[](int move_num){
+    assert(move_num >= 0 && move_num < size() && "Indexing out of bounds");
     return m_moves[move_num];
 }

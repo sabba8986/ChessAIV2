@@ -27,6 +27,7 @@ class Board{
     EnumArr<std::uint64_t, 2> all_pieces;
     EnumArr<Piece, 64> pieces;
     std::uint64_t pinned;
+    std::uint64_t checkers;
     std::stack<History> prev_moves;
     int en_passant_sq;
     std::uint8_t castle_rights;

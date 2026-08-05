@@ -111,7 +111,7 @@ void Board::make_move(Move move){
     int dest = move.dest();
     Piece moved = pieces[src];
     Color enemy_color = other_color(turn);
-    prev_moves.emplace(move, UndoMove(en_passant_sq, get_type(pieces[dest]), castle_rights, clock, pinned));
+    prev_moves.emplace(move, UndoMove(en_passant_sq, get_type(pieces[dest]), castle_rights, clock, pinned, checkers));
     if(move.is_castle()){
         do_castle(src, dest);
     }
@@ -147,7 +147,8 @@ void Board::make_move(Move move){
     }
     turn = enemy_color;
     recalculate_all_pieces();
-    recalculate_pinned(enemy_color);
+    recalculate_pinned(turn);
+    checkers = get_checkers(turn);
     //assert_valid();
     //Must omit the following line in debug builds, since en passant move gen relies on checking if move leaves ally king in check to determine legality
     //assert(!in_check(other_color(enemy_color)) && "Cannot leave ally king in check"); 
@@ -283,6 +284,7 @@ void Board::undo_last_move(){
     en_passant_sq = undo_info.en_passant_sq();
     castle_rights = undo_info.castle_rights();
     pinned = undo_info.prev_enemy_pinned();
+    checkers = undo_info.prev_checkers();
     clock = undo_info.clock();
     recalculate_all_pieces();
     //assert_valid();
@@ -344,7 +346,6 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
     Color ally_color = get_color(piece);
     Color enemy_color = other_color(ally_color);
     PieceType ally_type = get_type(piece);
-    std::uint64_t checkers = get_checkers(ally_color);
     //cannot block a double check with a non-king piece
     if(piece == Piece::EMPTY || (std::popcount(checkers) == 2 && ally_type != PieceType::KING)){
         return 0;
@@ -499,7 +500,7 @@ void Board::populate_legal_moves(MoveList& list){
 
 
 bool Board::in_check(Color c){
-    return is_attacked(get_king_pos(c), other_color(c));
+    return c == turn ? checkers != 0 : is_attacked(get_king_pos(c), other_color(c));
 }
 
 
@@ -799,4 +800,5 @@ void Board::reset(){
     turn = Color::WHITE;
     pinned = 0;
     num_moves = 0; //currently unused
+    checkers = 0;
 }

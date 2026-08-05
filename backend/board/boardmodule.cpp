@@ -91,8 +91,10 @@ PYBIND11_MODULE(board_interface, m, py::mod_gil_not_used()){
         } 
         else if(current_board.get_cur_ply() > Board::get_max_plys()){
             std::cerr << "ERROR: Move stack stopped tracking moves after ply" << Board::get_max_plys() << ", aborting undo move operation" << std::endl;
+        } 
+        else{
+            current_board.undo_last_move();
         }
-        current_board.undo_last_move();
     }, "Undoes the last move on the board, printing an error if the undo operation cannot be fulfilled.");
     m.def("in_check", [](Color c){return current_board.in_check(c);}, "Returns whether the king of the specified color is in check");
     m.def("layout", [](){return current_board.layout();}, "Gets the layout of the board as a prettified FEN string");

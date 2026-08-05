@@ -1,0 +1,1 @@
+pip install .. --config-settings=cmake.args="-G MinGW Makefiles" --config-settings=cmake.build-type="Release"

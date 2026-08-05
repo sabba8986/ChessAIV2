@@ -28,5 +28,4 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_compile_options(board_interface PRIVATE /constexpr:steps30000000)
 endif()
 
-
 install(TARGETS board_interface LIBRARY DESTINATION ${SKBUILD_PROJECT_NAME})

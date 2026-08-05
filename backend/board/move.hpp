@@ -24,6 +24,7 @@ public:
     static constexpr MoveFlag castle_flag = 1u << 15;
     Move() = default;
     Move(int src, int dest, MoveFlag flags = 0, PieceType promoted_type = PieceType::EMPTY);
+    Move(std::uint16_t move);
     int src();
     int dest();
     bool is_en_passant();

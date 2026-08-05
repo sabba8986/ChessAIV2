@@ -51,7 +51,8 @@ class Board{
     void add_castle_if_legal(Color c, MoveList& list);
     std::uint64_t get_quiets_and_captures(int sq) const;
     std::uint64_t get_legal_quiets_and_captures(int sq);
-    std::uint64_t get_castle_moves(Color c);
+    std::uint64_t get_legal_castle_moves(Color c);
+    std::uint64_t get_legal_en_passant_moves(int sq);
     std::uint64_t get_en_passant_row(Color c);
     void recalculate_pinned(Color c);
 

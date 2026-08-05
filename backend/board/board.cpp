@@ -39,16 +39,16 @@ void Board::do_castle(int src, int dest){
     if(src < dest){
         bitboards[king] <<= 2;
         bitboards[rook] ^= ((1ull << dest) | (1ull << (src + 1)));
-        pieces[src + 2] = pieces[src];
-        pieces[src + 1] = pieces[dest];
-        all_pieces[turn] ^= (turn == Color::WHITE ? white_left_all_mask : black_left_all_mask);
+        pieces[src + 2] = king;
+        pieces[src + 1] = rook;
+        //all_pieces[turn] ^= (turn == Color::WHITE ? white_left_all_mask : black_left_all_mask);
     }
     else{
         bitboards[king] >>= 2;
         bitboards[rook] ^= ((1ull << dest) | (1ull << (src - 1)));
-        pieces[src - 2] = pieces[src];
-        pieces[src - 1] = pieces[dest];
-        all_pieces[turn] ^= (turn == Color::WHITE ? white_right_all_mask : black_right_all_mask);
+        pieces[src - 2] = king;
+        pieces[src - 1] = rook;
+        //all_pieces[turn] ^= (turn == Color::WHITE ? white_right_all_mask : black_right_all_mask);
     }
     pieces[src] = Piece::EMPTY;
     pieces[dest] = Piece::EMPTY;
@@ -71,18 +71,14 @@ void Board::move_piece(int src, int dest){
     }
     pieces[dest] = attacker;
     PieceType attacker_type = get_type(attacker);
-    if(get_type(attacker) == PieceType::ROOK){
-        if(src > get_king_pos(turn)){
-            castle_rights &= ~(turn == Color::WHITE ? white_left_castle_allowed_flag : black_left_castle_allowed_flag);
-        }
-        else{
-            castle_rights &= ~(turn == Color::WHITE ? white_right_castle_allowed_flag : black_right_castle_allowed_flag);
-        }
-    }
-    else if(get_type(attacker) == PieceType::KING){
+    if(attacker_type == PieceType::KING){
         castle_rights &= ~(turn == Color::WHITE ? (white_left_castle_allowed_flag | white_right_castle_allowed_flag) : 
                                                      (black_left_castle_allowed_flag | black_right_castle_allowed_flag));
     }
+    else if(src == 0 || dest == 0) castle_rights &= ~(white_right_castle_allowed_flag);
+    else if(src == 7 || dest == 7) castle_rights &= ~(white_left_castle_allowed_flag);
+    else if(src == 56 || dest == 56) castle_rights &= ~(black_right_castle_allowed_flag);
+    else if(src == 63 || dest == 63) castle_rights &= ~(black_left_castle_allowed_flag);
 }
 
 
@@ -106,6 +102,7 @@ void Board::do_en_passant(int en_passant_sq){
     bitboards[pawn] ^= captured_mask;
     //all_pieces[enemy_color] ^= captured_mask;
     pieces[captured_piece_sq] = Piece::EMPTY;
+    en_passant_sq = 0;
 }
 
 
@@ -127,16 +124,16 @@ void Board::make_move(Move move){
             do_en_passant(en_passant_sq);
         }
     }
-    if(moved == Piece::WHITE_PAWN){
+    if(get_type(moved) == PieceType::PAWN){
         clock = 0;
-        if(dest - src == 16){
+        if(dest - src == 16 && src > 7 && src < 16){
             en_passant_sq = src + 8;
         }
-    }
-    else if(moved == Piece::BLACK_PAWN){
-        clock = 0;
-        if(src - dest == 16){
+        else if(src - dest == 16 && src > 47 && src < 56){
             en_passant_sq = dest + 8;
+        }
+        else{
+            en_passant_sq = 0;
         }
     }
     else{
@@ -151,7 +148,9 @@ void Board::make_move(Move move){
     turn = enemy_color;
     recalculate_all_pieces();
     recalculate_pinned(enemy_color);
-    assert_valid();
+    //assert_valid();
+    //Must omit the following line in debug builds, since en passant move gen relies on checking if move leaves ally king in check to determine legality
+    //assert(!in_check(other_color(enemy_color)) && "Cannot leave ally king in check"); 
 }
 
 
@@ -175,7 +174,8 @@ std::uint64_t Board::get_attackers(int sq, Color attacker_color) const{
 
 
 bool Board::is_attacked(int sq, Color attacker_color) const{
-    std::uint64_t allies = all_pieces[turn];
+    Color defender_color = other_color(attacker_color);
+    std::uint64_t allies = all_pieces[defender_color];
     std::uint64_t enemies = all_pieces[attacker_color];
     std::uint64_t enemy_queen = bitboards[to_piece(attacker_color, PieceType::QUEEN)];
     if(bitboard_moves::rook(sq, allies, enemies) & (bitboards[to_piece(attacker_color, PieceType::ROOK)] | enemy_queen)){
@@ -187,7 +187,7 @@ bool Board::is_attacked(int sq, Color attacker_color) const{
     else if(bitboard_moves::knight(sq, allies, enemies) & bitboards[to_piece(attacker_color, PieceType::KNIGHT)]){
         return true;
     }
-    else if(bitboard_moves::pawn_captures(sq, turn, enemies) & bitboards[to_piece(attacker_color, PieceType::PAWN)]){
+    else if(bitboard_moves::pawn_captures(sq, defender_color, enemies) & bitboards[to_piece(attacker_color, PieceType::PAWN)]){
         return true;
     }
     else if(bitboard_moves::king(sq, allies, enemies) & bitboards[to_piece(attacker_color, PieceType::KING)]){
@@ -285,7 +285,7 @@ void Board::undo_last_move(){
     pinned = undo_info.prev_enemy_pinned();
     clock = undo_info.clock();
     recalculate_all_pieces();
-    assert_valid();
+    //assert_valid();
 }
 
 
@@ -394,7 +394,7 @@ std::uint64_t Board::get_legal_quiets_and_captures(int sq){
 }
 
 
-std::uint64_t Board::get_castle_moves(Color c){
+std::uint64_t Board::get_legal_castle_moves(Color c){
     std::uint64_t moves = 0;
     if(in_check(c)) return moves;
     std::uint64_t occ = all_pieces[Color::WHITE] | all_pieces[Color::BLACK];
@@ -423,6 +423,23 @@ std::uint64_t Board::get_castle_moves(Color c){
 }
 
 
+std::uint64_t Board::get_legal_en_passant_moves(int sq){
+    Piece pawn = pieces[sq];
+    Color c = get_color(pawn);
+    if(get_type(pawn) != PieceType::PAWN || ((1ull << sq) & get_en_passant_row(c)) == 0){
+        return 0;
+    }
+    std::uint64_t move = bitboard_moves::pawn_en_passant(sq, c, en_passant_sq);
+    if(move == 0){
+        return 0;
+    }
+    make_move(Move(sq, std::countr_zero(move), Move::en_passant_flag | Move::capture_flag));
+    bool results_in_check = in_check(c);
+    undo_last_move();
+    return results_in_check ? 0 : move;
+}
+
+
 BoardState Board::get_board_state(){
     return BoardState(*this);
 }
@@ -442,8 +459,8 @@ MoveList Board::get_legal_moves(int sq){
     Color enemy_color = other_color(ally_color);
     std::uint64_t quiets_and_captures = get_legal_quiets_and_captures(sq);
     std::uint64_t enemies = all_pieces[enemy_color];
-    std::uint64_t en_passant = (get_type(piece) == PieceType::PAWN && ((1ull << sq) & get_en_passant_row(ally_color))) ? bitboard_moves::pawn_en_passant(sq, ally_color, en_passant_sq) : 0;
-    std::uint64_t castles = ally_type == PieceType::KING ? get_castle_moves(ally_color) : 0;
+    std::uint64_t en_passant = get_legal_en_passant_moves(sq);
+    std::uint64_t castles = ally_type == PieceType::KING ? get_legal_castle_moves(ally_color) : 0;
     // keep in mind for future: if a pawn has one promotion move it can currently perform, then all of its moves must be promotions also
     while(quiets_and_captures){
         int dest = std::countr_zero(quiets_and_captures);

@@ -16,9 +16,11 @@ class BoardWidget(QWidget):
     def __init__(self, parent = None):
         super().__init__(parent)
         board.reset()
+
+        board.loadFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 0");
         self.boardState: BoardState = board.get_board_state()
         self.boardPixmap: QPixmap = QPixmap()
-        self.piecePixmaps: list[QPixmap] = [QPixmap()] * 14
+        self.piecePixmaps: list[QPixmap] = [QPixmap()] * 15
         self.tileLength: int = 0
         self.length: int = 0
         self.selectedSq: int | None = None
@@ -86,7 +88,7 @@ class BoardWidget(QWidget):
             if (1 << sq) & self.highlighted:
                 move: Move = tile.moves[0]                
                 painter.setPen(HIGHLIGHTED_PEN)
-                painter.setBrush(CAPTURE_BRUSH if move.is_capture() or move.is_en_passant() else NON_CAPTURE_BRUSH)
+                painter.setBrush(CAPTURE_BRUSH if move.is_capture() else NON_CAPTURE_BRUSH)
                 painter.drawRect(tile.rect)
             if piece != Piece.EMPTY:
                 if piece.type() == PieceType.KING and board.in_check(piece.color()):

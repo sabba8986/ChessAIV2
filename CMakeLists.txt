@@ -21,11 +21,11 @@ pybind11_add_module(board_interface backend/${SKBUILD_PROJECT_NAME}/boardmodule.
 
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(board_interface PRIVATE -fconstexpr-ops-limit=10000000)
+    target_compile_options(board_interface PRIVATE -fconstexpr-ops-limit=30000000)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_CXX_COMPILER_ID STREQUAL "IntelLLVM")
-    target_compile_options(board_interface PRIVATE -fconstexpr-steps=10000000)
+    target_compile_options(board_interface PRIVATE -fconstexpr-steps=30000000)
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    target_compile_options(board_interface PRIVATE /constexpr:steps10000000)
+    target_compile_options(board_interface PRIVATE /constexpr:steps30000000)
 endif()
 
 

@@ -64,7 +64,8 @@ class Board{
 public:
     Board();
     int get_king_pos(Color c) const;
-    MoveList get_legal_moves(int sq);
+    void populate_legal_moves(int sq, MoveList& list);
+    void populate_legal_moves(MoveList& list);
     void make_move(Move move);
     void undo_last_move();
     bool in_check(Color c);

@@ -445,15 +445,14 @@ BoardState Board::get_board_state(){
 }
 
 
-MoveList Board::get_legal_moves(int sq){
-    MoveList legal_moves;
+void Board::populate_legal_moves(int sq, MoveList& list){
     Piece piece = pieces[sq];
     if(piece == Piece::EMPTY){
-        return legal_moves;
+        return;
     }
     Color ally_color = get_color(piece);
     if(ally_color != turn){
-        return legal_moves;
+        return;
     }
     PieceType ally_type = get_type(piece);
     Color enemy_color = other_color(ally_color);
@@ -471,25 +470,31 @@ MoveList Board::get_legal_moves(int sq){
         }
         if((dest_mask & get_promotion_row(ally_color)) && ally_type == PieceType::PAWN){
             flags |= Move::promotion_flag;
-            legal_moves.add_move(Move(sq, dest, flags, PieceType::QUEEN));
-            legal_moves.add_move(Move(sq, dest, flags, PieceType::KNIGHT));
-            legal_moves.add_move(Move(sq, dest, flags, PieceType::BISHOP));
-            legal_moves.add_move(Move(sq, dest, flags, PieceType::ROOK));
+            list.add_move(Move(sq, dest, flags, PieceType::QUEEN));
+            list.add_move(Move(sq, dest, flags, PieceType::KNIGHT));
+            list.add_move(Move(sq, dest, flags, PieceType::BISHOP));
+            list.add_move(Move(sq, dest, flags, PieceType::ROOK));
         }
         else{
-            legal_moves.add_move(Move(sq, dest, flags));
+            list.add_move(Move(sq, dest, flags));
         }
         quiets_and_captures ^= (1ull << dest);
     }
     if(en_passant){
-        legal_moves.add_move(Move(sq, en_passant_sq, Move::en_passant_flag | Move::capture_flag));
+        list.add_move(Move(sq, en_passant_sq, Move::en_passant_flag | Move::capture_flag));
     }
     while(castles){
         int dest = std::countr_zero(castles);
-        legal_moves.add_move(Move(sq, dest, Move::castle_flag));
+        list.add_move(Move(sq, dest, Move::castle_flag));
         castles ^= (1ull << dest);
     }
-    return legal_moves;
+}
+
+
+void Board::populate_legal_moves(MoveList& list){
+    for(int sq = 0; sq < 64; sq++){
+        populate_legal_moves(sq, list);
+    }
 }
 
 
@@ -571,34 +576,33 @@ void Board::populate_perft(int depth, PerftResults& stats){
         stats.nodes = 1;
         return;
     }
-    for(int sq = 0; sq < 64; sq++){
-        MoveList move_list = get_legal_moves(sq);
-        for(int i = 0; i < move_list.size(); i++){
-            Move move = move_list[i];
-            make_move(move);
-            if(depth == 1){
-                stats.nodes++;
-                if(move.is_promotion()){
-                    stats.promotions++;
-                }
-                if(move.is_capture()){
-                    stats.captures++;
-                }
-                if(move.is_en_passant()){
-                    stats.en_passants++;
-                }
-                if(move.is_castle()){
-                    stats.castles++;
-                }
-                if(turn_color_in_check()){
-                    stats.checks++;
-                }
-            } 
-            else{
-                populate_perft(depth - 1, stats);
+    MoveList move_list;
+    populate_legal_moves(move_list);
+    for(int i = 0; i < move_list.size(); i++){
+        Move move = move_list[i];
+        make_move(move);
+        if(depth == 1){
+            stats.nodes++;
+            if(move.is_promotion()){
+                stats.promotions++;
             }
-            undo_last_move();
+            if(move.is_capture()){
+                stats.captures++;
+            }
+            if(move.is_en_passant()){
+                stats.en_passants++;
+            }
+            if(move.is_castle()){
+                stats.castles++;
+            }
+            if(turn_color_in_check()){
+                stats.checks++;
+            }
+        } 
+        else{
+            populate_perft(depth - 1, stats);
         }
+        undo_last_move();
     }
 }
 

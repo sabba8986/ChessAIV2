@@ -577,11 +577,7 @@ void Board::assert_valid(){
 }
 
 
-void Board::populate_perft(int depth, PerftResults& stats){
-    if(depth == 0){
-        stats.nodes = 1;
-        return;
-    }
+void Board::perft_helper(int depth, PerftResults& stats){
     MoveList move_list;
     populate_legal_moves(move_list);
     for(int i = 0; i < move_list.size(); i++){
@@ -604,12 +600,23 @@ void Board::populate_perft(int depth, PerftResults& stats){
             if(turn_color_in_check()){
                 stats.checks++;
             }
-        } 
+        }
         else{
-            populate_perft(depth - 1, stats);
+            perft_helper(depth - 1, stats);
         }
         undo_last_move();
     }
+}
+
+
+PerftResults Board::perft(int depth){
+    PerftResults stats;
+    if(depth == 0){
+        stats.nodes++;
+        return stats;
+    }
+    perft_helper(depth, stats);
+    return stats;
 }
 
 

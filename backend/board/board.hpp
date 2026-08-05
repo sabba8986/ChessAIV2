@@ -57,6 +57,7 @@ class Board{
     std::uint64_t get_legal_en_passant_moves(int sq);
     std::uint64_t get_en_passant_row(Color c);
     void recalculate_pinned(Color c);
+    void perft_helper(int depth, PerftResults& stats);
     std::uint64_t fast_perft_helper(int depth);
     
     template<Color c>
@@ -81,7 +82,7 @@ public:
 
     std::string layout() const;
     void assert_valid();
-    void populate_perft(int depth, PerftResults& stats);
+    PerftResults perft(int depth);
     std::uint64_t fast_perft(int depth);
     std::expected<void, FENError> load_FEN(const std::string& str);
     friend struct BoardState;

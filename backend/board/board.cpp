@@ -659,25 +659,27 @@ std::expected<std::array<std::string_view, 6>, FENError> Board::parse_FEN(const 
     if(active_color.size() != 1 || (active_color[0] != 'w' && active_color[0] != 'b')) return std::unexpected(FENError::INVALID_ACTIVE_COLOR);
 
     auto castle_rights = sections[2];
-    bool found_K = false, found_Q = false, found_k = false, found_q = false;
-    for(char c: castle_rights){
-        if(c == 'K'){
-            if(found_K) return std::unexpected(FENError::DUPLICATE_CASTLE_RIGHTS);
-            else found_K = true;
+    if(castle_rights != "-"){
+        bool found_K = false, found_Q = false, found_k = false, found_q = false;
+        for(char c: castle_rights){
+            if(c == 'K'){
+                if(found_K) return std::unexpected(FENError::DUPLICATE_CASTLE_RIGHTS);
+                else found_K = true;
+            }
+            else if(c == 'Q'){
+                if(found_Q) return std::unexpected(FENError::DUPLICATE_CASTLE_RIGHTS);
+                else found_Q = true;
+            }
+            else if(c == 'k'){
+                if(found_k) return std::unexpected(FENError::DUPLICATE_CASTLE_RIGHTS);
+                else found_k = true;
+            }
+            else if(c == 'q'){
+                if(found_q) return std::unexpected(FENError::DUPLICATE_CASTLE_RIGHTS);
+                else found_q = true;
+            }
+            else return std::unexpected(FENError::INVALID_CASTLE_RIGHTS);
         }
-        else if(c == 'Q'){
-            if(found_Q) return std::unexpected(FENError::DUPLICATE_CASTLE_RIGHTS);
-            else found_Q = true;
-        }
-        else if(c == 'k'){
-            if(found_k) return std::unexpected(FENError::DUPLICATE_CASTLE_RIGHTS);
-            else found_k = true;
-        }
-        else if(c == 'q'){
-            if(found_q) return std::unexpected(FENError::DUPLICATE_CASTLE_RIGHTS);
-            else found_q = true;
-        }
-        else return std::unexpected(FENError::INVALID_CASTLE_RIGHTS);
     }
 
     auto en_passant_sq = sections[3];
@@ -751,13 +753,16 @@ std::expected<void, FENError> Board::load_FEN(const std::string& str){
     }
 
     castle_rights = 0;
-    for(char castle_right: sections[2]){
-        switch(castle_right){
-            case 'K': castle_rights |= white_right_castle_allowed_flag; break;
-            case 'Q': castle_rights |= white_left_castle_allowed_flag; break;
-            case 'k': castle_rights |= black_right_castle_allowed_flag; break;
-            case 'q': castle_rights |= black_left_castle_allowed_flag; break;
-            default: break;
+    auto castle_rights_FEN = sections[2];
+    if(castle_rights_FEN != "-"){
+        for(char castle_right: castle_rights_FEN){
+            switch(castle_right){
+                case 'K': castle_rights |= white_right_castle_allowed_flag; break;
+                case 'Q': castle_rights |= white_left_castle_allowed_flag; break;
+                case 'k': castle_rights |= black_right_castle_allowed_flag; break;
+                case 'q': castle_rights |= black_left_castle_allowed_flag; break;
+                default: break;
+            }
         }
     }
 

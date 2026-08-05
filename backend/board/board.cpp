@@ -106,12 +106,19 @@ void Board::do_en_passant(int en_passant_sq){
 }
 
 
+std::size_t Board::get_cur_ply(){
+    return cur_ply;
+}
+
+//WILL throw an exception if the move stack is currently full (i.e. cur_ply > MAX_PLYS)
 void Board::make_move(Move move){
     int src = move.src();
     int dest = move.dest();
     Piece moved = pieces[src];
     Color enemy_color = other_color(turn);
-    prev_moves.emplace(move, UndoMove(en_passant_sq, get_type(pieces[dest]), castle_rights, clock, pinned, checkers));
+    prev_moves[cur_ply] = History(move, UndoMove(en_passant_sq, get_type(pieces[dest]), castle_rights, clock, pinned, checkers));
+    cur_ply++;
+    if(cur_ply % 2 == 0) num_moves++;
     if(move.is_castle()){
         do_castle(src, dest);
     }
@@ -261,11 +268,9 @@ void Board::undo_en_passant(int en_passant_sq){
 
 
 void Board::undo_last_move(){
-    if(prev_moves.size() == 0){
-        return;
-    }
-    auto [move, undo_info] = std::move(prev_moves.top());
-    prev_moves.pop();
+    if(cur_ply % 2 == 0) num_moves--;
+    cur_ply--;
+    auto& [move, undo_info] = prev_moves[cur_ply];
     int src = move.src();
     int dest = move.dest();
     turn = other_color(turn);
@@ -714,7 +719,7 @@ std::expected<void, FENError> Board::load_FEN(const std::string& str){
     if(!res.has_value()) return std::unexpected(res.error());
     const auto& sections = res.value();
     
-    prev_moves = std::stack<History>();
+    cur_ply = 0;
     auto board_FEN = sections[0];
     int sq = 63;
     std::uint64_t trav = 1ull << 63;
@@ -784,7 +789,6 @@ std::expected<void, FENError> Board::load_FEN(const std::string& str){
 
     auto num_moves_FEN = sections[5];
     std::from_chars(num_moves_FEN.data(), num_moves_FEN.data() + num_moves_FEN.size(), num_moves);
-
     return {};
 }
 
@@ -799,6 +803,7 @@ void Board::reset(){
     clock = 0;
     turn = Color::WHITE;
     pinned = 0;
-    num_moves = 0; //currently unused
+    num_moves = 1; //currently unused
+    cur_ply = 0;
     checkers = 0;
 }

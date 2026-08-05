@@ -8,7 +8,6 @@
 #include "history.hpp"
 #include <cstdint>
 #include <array>
-#include <stack>
 #include <bit>
 #include "board_state.hpp"
 #include "perft_results.hpp"
@@ -18,6 +17,7 @@
 #include <expected>
 
 class Board{
+    static constexpr std::size_t MAX_PLYS = 128;
     static constexpr std::uint8_t white_left_castle_allowed_flag = 1;
     static constexpr std::uint8_t white_right_castle_allowed_flag = 2;
     static constexpr std::uint8_t black_left_castle_allowed_flag = 4;
@@ -28,12 +28,13 @@ class Board{
     EnumArr<Piece, 64> pieces;
     std::uint64_t pinned;
     std::uint64_t checkers;
-    std::stack<History> prev_moves;
+    std::array<History, MAX_PLYS> prev_moves;
     int en_passant_sq;
     std::uint8_t castle_rights;
     int clock;
     Color turn;
-    int num_moves;
+    std::size_t num_moves;
+    std::size_t cur_ply;
 
     std::uint64_t get_checkers(Color c) const;
 
@@ -64,6 +65,7 @@ class Board{
     
 public:
     Board();
+    constexpr static std::size_t get_max_plys(){ return MAX_PLYS; }
     int get_king_pos(Color c) const;
     void populate_legal_moves(int sq, MoveList& list);
     void populate_legal_moves(MoveList& list);
@@ -73,6 +75,8 @@ public:
     bool turn_color_in_check();
     void reset();
     BoardState get_board_state();
+    std::size_t get_cur_ply();
+
 
     std::string layout() const;
     void assert_valid();

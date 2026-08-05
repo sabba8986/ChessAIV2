@@ -613,6 +613,25 @@ void Board::populate_perft(int depth, PerftResults& stats){
 }
 
 
+std::uint64_t Board::fast_perft_helper(int depth){
+    MoveList move_list;
+    populate_legal_moves(move_list);
+    if(depth == 1) return move_list.size();
+    std::uint64_t cnt = 0;
+    for(int i = 0; i < move_list.size(); i++){
+        Move move = move_list[i];
+        make_move(move);
+        cnt += fast_perft_helper(depth - 1);
+        undo_last_move();
+    }
+    return cnt;
+}
+
+
+std::uint64_t Board::fast_perft(int depth){
+    return depth == 0 ? 1 : fast_perft_helper(depth);
+}
+
 std::expected<std::array<std::string_view, 6>, FENError> Board::parse_FEN(const std::string& str){
     std::array<std::string_view, 6> sections;
     auto not_whitespace = [](unsigned char c){return !std::isspace(c);};

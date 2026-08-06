@@ -1,6 +1,4 @@
-#ifndef GAME_STATE
-#define GAME_STATE
-
+#pragma once
 #include <cstdint>
 
 
@@ -12,5 +10,3 @@ enum class GameState: std::uint8_t{
     DRAW_LACK_MATERIAL,
     DRAW_REPEATED_POSITION
 };
-
-#endif

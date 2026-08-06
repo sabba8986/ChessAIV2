@@ -1,6 +1,4 @@
-#ifndef MOVE_LIST
-#define MOVE_LIST
-
+#pragma once
 #include "move.hpp"
 #include <cstdint>
 #include <array>
@@ -16,4 +14,3 @@ public:
     Move operator[](int i);
 };
 
-#endif

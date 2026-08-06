@@ -1,5 +1,4 @@
-#ifndef MOVES
-#define MOVES
+#pragma once
 #include "piece.hpp"
 #include <cstdint>
 
@@ -14,4 +13,3 @@ namespace bitboard_moves{
     std::uint64_t queen(int sq, std::uint64_t allies, std::uint64_t enemies);
     std::uint64_t king(int sq, std::uint64_t allies, std::uint64_t enemies);
 }
-#endif

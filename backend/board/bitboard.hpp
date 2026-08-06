@@ -1,5 +1,4 @@
-#ifndef BITBOARD
-#define BITBOARD
+#pragma once
 #include <cstdint>
 #include <vector>
 #include <string>
@@ -153,5 +152,3 @@ namespace bitboard{
         return result;
     }
 };
-
-#endif

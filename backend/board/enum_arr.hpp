@@ -1,5 +1,4 @@
-#ifndef ARR 
-#define ARR
+#pragma once
 #include <array>
 #include <cstddef>
 
@@ -52,6 +51,3 @@ public:
 
     constexpr void fill(const T& val){ data.fill(val);}
 };
-
-
-#endif

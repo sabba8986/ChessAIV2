@@ -1,5 +1,4 @@
-#ifndef UNDO_MOVE
-#define UNDO_MOVE
+#pragma once
 
 #include "piece.hpp"
 #include <cstdint>
@@ -25,5 +24,3 @@ public:
     std::uint64_t prev_enemy_pinned();
     std::uint64_t prev_checkers();
 };
-
-#endif

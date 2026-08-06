@@ -1,5 +1,4 @@
-#ifndef PERFT_RESULTS
-#define PERFT_RESULTS
+#pragma once
 #include <iostream>
 
 struct PerftResults{
@@ -22,6 +21,3 @@ inline std::ostream& operator<<(std::ostream& os, const PerftResults& stats){
     os << "\tchecks: " << stats.checks << "\n}";
     return os;
 }
-
-
-#endif

@@ -1,6 +1,4 @@
-#ifndef HISTORY
-#define HISTORY
-
+#pragma once
 #include "move.hpp"
 #include "undo_move.hpp"
 
@@ -11,5 +9,3 @@ struct History{
     History() = default;
     History(Move move, UndoMove&& undo_info);
 };
-
-#endif

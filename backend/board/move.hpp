@@ -1,5 +1,4 @@
-#ifndef MOVE
-#define MOVE
+#pragma once
 
 #include "piece.hpp"
 #include <cstdint>
@@ -34,5 +33,3 @@ public:
     bool is_quiet();
     bool is_capture();
 };
-
-#endif

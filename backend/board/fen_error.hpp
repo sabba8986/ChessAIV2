@@ -1,5 +1,4 @@
-#ifndef FEN_ERROR
-#define FEN_ERROR
+#pragma once
 #include <string>
 
 enum class FENError{
@@ -41,6 +40,3 @@ inline std::string string_rep(FENError err){
         default: return "";
     }
 }
-
-
-#endif

@@ -1,6 +1,4 @@
-#ifndef BOARD_STATE
-#define BOARD_STATE
-
+#pragma once
 #include "piece.hpp"
 #include "move_list.hpp"
 #include "enum_arr.hpp"
@@ -25,6 +23,3 @@ public:
     Piece piece(int sq);
     GameState game_state();
 };
-
-
-#endif

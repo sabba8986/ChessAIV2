@@ -1,4 +1,6 @@
-#pragma once
+#ifndef PIECE
+#define PIECE
+
 #include <cassert>
 #include <cstdint>
 
@@ -67,3 +69,4 @@ constexpr PieceType to_type(int p){
 constexpr Color other_color(Color c){
     return c == Color::WHITE ? Color::BLACK : Color::WHITE;
 }
+#endif

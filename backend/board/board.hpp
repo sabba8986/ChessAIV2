@@ -1,4 +1,6 @@
-#pragma once
+#ifndef BOARD
+#define BOARD
+
 #include "piece.hpp"
 #include "move.hpp"
 #include "move_list.hpp"
@@ -117,3 +119,6 @@ void Board::recalculate_pinned(){
         straight_attackers ^= (1ull << pinner_sq);
     }
 }
+
+
+#endif

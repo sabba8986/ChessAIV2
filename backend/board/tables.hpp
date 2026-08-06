@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TABLES
+#define TABLES
 #include <array>
 #include <cstdint>
 #include "bitboard.hpp"
@@ -308,3 +309,5 @@ namespace tables{
     }
 }
 
+
+#endif

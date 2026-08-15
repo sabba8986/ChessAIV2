@@ -1,3 +1,6 @@
-#pragma once
+#ifndef PCH
+#define PCH
 
 #include "tables.hpp"
+
+#endif

@@ -11,7 +11,6 @@
 #include <bit>
 #include "board_state.hpp"
 #include "perft_results.hpp"
-#include "pch.hpp"
 #include <string>
 #include "fen_error.hpp"
 #include <expected>
@@ -36,26 +35,57 @@ class Board{
     std::size_t num_moves;
     std::size_t cur_ply;
 
-    std::uint64_t get_checkers(Color c) const;
-
+    template<Color c>
     void do_castle(int src, int dest);
+
+    template<Color c>
     void move_piece(int src, int dest);
+
+    template<Color c>
     void promote(int sq, PieceType p);
+
+    template<Color c>
     void do_en_passant(int en_passant_sq);
+
+    template<Color c>
     void undo_castle(int src, int dest);
-    void undo_move_piece(int src, int dest, PieceType captured_piece_type);
+
+    template<Color c>
+    void undo_move_piece(int src, int dest, Piece captured_piece);
+
+    template<Color c>
     void undo_promote(int sq);
+
+    template<Color c>
     void undo_en_passant(int en_passant_sq);
+
+
     void recalculate_all_pieces();
-    std::uint64_t get_promotion_row(Color c);
-    std::uint64_t get_attackers(int sq, Color attacker_color) const;
-    bool is_attacked(int sq, Color attacker_color) const;
-    void add_castle_if_legal(Color c, MoveList& list);
-    std::uint64_t get_quiets_and_captures(int sq) const;
+
+    template<Color attacker_color>
+    std::uint64_t get_attackers(int sq);
+
+    template<Color attacker_color>
+    bool is_attacked(int sq);
+
+    template<Color c>
+    std::uint64_t get_checkers();
+
+    template<Color c>
+    std::uint64_t get_quiets_and_captures(int sq);
+
+    template<Color c>
     std::uint64_t get_legal_quiets_and_captures(int sq);
-    std::uint64_t get_legal_castle_moves(Color c);
+
+    template<Color c>
+    std::uint64_t get_legal_castle_moves();
+
+    template<Color c>
     std::uint64_t get_legal_en_passant_moves(int sq);
-    std::uint64_t get_en_passant_row(Color c);
+
+    template<Color c>
+    void populate_legal_moves(int sq, MoveList& list);
+
     void recalculate_pinned(Color c);
     void perft_helper(int depth, PerftResults& stats);
     std::uint64_t fast_perft_helper(int depth);
@@ -64,23 +94,53 @@ class Board{
     void recalculate_pinned();
 
     std::expected<std::array<std::string_view, 6>, FENError> parse_FEN(const std::string& str);
+
+    template<Color c>
+    void make_move(Move move);
+
+    template<Color c>
+    void undo_last_move();
+
+    template<Color c>
+    static std::uint64_t get_pawn_starting_row();
+
+    template<Color c>
+    static std::uint64_t get_pawn_double_push_row();
+
+    template<Color c>
+    static std::uint64_t get_en_passant_row();
+
+    template<Color c>
+    static std::uint64_t get_promotion_row();
+
+    template<Color c>
+    int get_king_pos();
+
     
 public:
     Board();
     constexpr static std::size_t get_max_plys(){ return MAX_PLYS; }
-    int get_king_pos(Color c) const;
+
     void populate_legal_moves(int sq, MoveList& list);
     void populate_legal_moves(MoveList& list);
     void make_move(Move move);
     void undo_last_move();
+
+    int get_king_pos(Color c);
+
+    template<Color c>
+    bool in_check();
+
     bool in_check(Color c);
+
+
     bool turn_color_in_check();
     void reset();
     BoardState get_board_state();
     std::size_t get_cur_ply();
 
 
-    std::string layout() const;
+    std::string layout();
     void assert_valid();
     PerftResults perft(int depth);
     std::uint64_t fast_perft(int depth);
@@ -89,36 +149,6 @@ public:
 };
 
 
-template<Color c>
-void Board::recalculate_pinned(){
-    using namespace tables::pins;
-    constexpr Color enemy_color = other_color(c);
-    int king_sq = get_king_pos(c);
-    pinned = 0;
-    std::uint64_t enemy_queens = bitboards[to_piece(enemy_color, PieceType::QUEEN)];
-    std::uint64_t diagonal_attackers = (bitboards[to_piece(enemy_color, PieceType::BISHOP)] | enemy_queens) & diagonal_mask[king_sq];
-    std::uint64_t straight_attackers = (bitboards[to_piece(enemy_color, PieceType::ROOK)] | enemy_queens) & straight_mask[king_sq];
-    std::uint64_t all_occ = all_pieces[Color::WHITE] | all_pieces[Color::BLACK];
-    while(diagonal_attackers){
-        int pinner_sq = std::countr_zero(diagonal_attackers);
-        assert(pinner_sq >= 0 && pinner_sq < 64);
-        std::uint64_t blockers = diagonal_between[king_sq][pinner_sq] & all_occ;
-        std::uint64_t ally_blockers = blockers & all_pieces[c];
-        if(std::has_single_bit(blockers) && (ally_blockers != 0)){
-            pinned |= ally_blockers;
-        }
-        diagonal_attackers ^= (1ull << pinner_sq);
-    }
-    while(straight_attackers){
-        int pinner_sq = std::countr_zero(straight_attackers);
-        std::uint64_t blockers = straight_between[king_sq][pinner_sq] & all_occ;
-        std::uint64_t ally_blockers = blockers & all_pieces[c];
-        if(std::has_single_bit(blockers) && (ally_blockers != 0)){
-            pinned |= ally_blockers;
-        }
-        straight_attackers ^= (1ull << pinner_sq);
-    }
-}
-
+#include "board.inl"
 
 #endif

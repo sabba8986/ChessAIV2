@@ -1,7 +1,7 @@
 #include "board_state.hpp"
 #include "board.hpp"
 
-BoardState::BoardState(Board& board): m_pieces{board.pieces.to_array()}, m_in_check{{board.in_check(Color::WHITE), board.in_check(Color::BLACK)}}, m_move_lists{}{
+BoardState::BoardState(Board& board): m_pieces{board.pieces.to_array()}, m_in_check{{board.in_check<Color::WHITE>(), board.in_check<Color::BLACK>()}}, m_move_lists{}{
     bool no_legal_moves = true;
     for(int sq = 0; sq < 64; sq++){
         board.populate_legal_moves(sq, m_move_lists[sq]);

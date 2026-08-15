@@ -8,7 +8,9 @@
 #include <utility>
 #include <cassert>
 #include <cctype>
+#include <climits>
 #include <algorithm>
+#include "score_weights.hpp"
 
 
 namespace{
@@ -20,7 +22,6 @@ namespace{
     inline const std::string files = "abcdefgh";
     inline const std::string ranks = "12345678";
 }
-
 
 Board::Board(){
     reset();
@@ -69,13 +70,20 @@ int Board::get_king_pos(Color c){
 }
 
 
-bool Board::in_check(Color c){
-    return c == Color::WHITE ? in_check<Color::WHITE>() : in_check<Color::BLACK>();
+bool Board::turn_color_in_check(){
+    return checkers != 0;
 }
 
 
-bool Board::turn_color_in_check(){
-    return turn == Color::WHITE ? in_check<Color::WHITE>() : in_check<Color::BLACK>();
+bool Board::turn_color_in_checkmate(){
+    if(turn_color_in_check()){
+        MoveList list;
+        populate_legal_moves(list);
+        if(list.size() == 0){
+            return true;
+        }
+    }
+    return false;
 }
 
 
@@ -402,6 +410,169 @@ std::expected<void, FENError> Board::load_FEN(const std::string& str){
     auto num_moves_FEN = sections[5];
     std::from_chars(num_moves_FEN.data(), num_moves_FEN.data() + num_moves_FEN.size(), num_moves);
     return {};
+}
+
+
+int Board::score(){
+    using enum Piece;
+    std::uint64_t white_rooks = bitboards[WHITE_ROOK];
+    std::uint64_t black_rooks = bitboards[BLACK_ROOK];
+    std::uint64_t white_bishops = bitboards[WHITE_BISHOP];
+    std::uint64_t black_bishops = bitboards[BLACK_BISHOP];
+    std::uint64_t white_queens = bitboards[WHITE_QUEEN];
+    std::uint64_t black_queens = bitboards[BLACK_QUEEN];
+    std::uint64_t white_knights = bitboards[WHITE_KNIGHT];
+    std::uint64_t black_knights = bitboards[BLACK_KNIGHT];
+    int material_score = 
+        material_weights::pawn_weight * (std::popcount(bitboards[WHITE_PAWN]) - std::popcount(bitboards[BLACK_PAWN])) + 
+        material_weights::rook_weight * (std::popcount(white_rooks) - std::popcount(black_rooks)) + 
+        material_weights::knight_weight * (std::popcount(white_knights) - std::popcount(black_knights)) + 
+        material_weights::bishop_weight * (std::popcount(white_bishops) - std::popcount(black_bishops)) + 
+        material_weights::queen_weight * (std::popcount(white_queens) - std::popcount(black_queens));
+    auto mobility_diff = [&](std::uint64_t white_sqs, std::uint64_t black_sqs){
+        int diff = 0;
+        while(white_sqs){
+            int white_sq = std::countr_zero(white_sqs);
+            diff += std::popcount(get_quiets_and_captures<Color::WHITE>(white_sq));
+            white_sqs ^= (1ull << white_sq);
+        }
+        while(black_sqs){
+            int black_sq = std::countr_zero(black_sqs);
+            diff -= std::popcount(get_quiets_and_captures<Color::BLACK>(black_sq));
+            black_sqs ^= (1ull << black_sq);
+        }
+        return diff;
+    };
+    int mobility_score = 
+        mobility_weights::knight_weight * mobility_diff(white_knights, black_knights) + 
+        mobility_weights::bishop_weight * mobility_diff(white_bishops, black_bishops) + 
+        mobility_weights::rook_weight * mobility_diff(white_rooks, black_rooks) + 
+        mobility_weights::queen_weight * mobility_diff(white_queens, black_queens);
+    return (material_score + mobility_score) * (turn == Color::WHITE ? 1 : -1);
+}
+
+
+int Board::evaluate_move(Move move){
+    int sc = 10;
+    Piece capturer = pieces[move.src()];
+    Piece captured = pieces[move.dest()];
+    if(move.is_capture()){
+        sc += 10 * get_weight(get_type(captured)) - get_weight(get_type(capturer)) + 60; 
+    }
+    if(move.is_promotion()){
+        sc += 40 + 3 * (get_weight(move.promoted_type()));
+    }
+    else if(move.is_castle()){
+        sc += 10;
+    }
+    return sc;
+}
+
+
+//returns the best move searching until ply "depth"
+int Board::best_score(int depth, int a, int b){
+    if(turn_color_in_checkmate()){
+        return turn == Color::WHITE ? INT_MAX : INT_MIN;
+    }
+    if(depth == 0){
+        return score();
+    }
+    MoveList list;
+    populate_legal_moves(list);
+    int best_board_score = INT_MIN;
+    for(int start = 0; start < list.size(); start++){
+        int cur_best_move_score = INT_MIN;
+        int cur_best_move_index;
+        for(int i = start; i < list.size(); i++){
+            Move move = list[i];
+            int move_score = evaluate_move(move);
+            if(move_score > cur_best_move_score){
+                cur_best_move_score = move_score;
+                cur_best_move_index = i;
+            }
+        }
+
+        make_move(list[cur_best_move_index]);
+        int tree_score = best_score(depth - 1, a, b);
+        undo_last_move();
+        if(turn == Color::WHITE){
+            tree_score -= depth;
+        }
+        else{
+            tree_score += depth;
+        }
+        best_board_score = std::max(best_board_score, tree_score);
+        if((turn == Color::WHITE && b <= tree_score) || (turn == Color::BLACK && a >= tree_score)){
+            break;
+        }
+        a = std::max(a, tree_score);
+        b = std::min(b, tree_score);
+
+        Move tmp = list[start];
+        list.set(start, list[cur_best_move_index]);
+        list.set(cur_best_move_index, tmp);
+    }
+    return best_board_score;
+}
+
+
+std::tuple<Move, int> Board::ids(int depth){
+    assert(depth > 0 && !turn_color_in_checkmate());
+    Move best_move;
+    int best_board_score = INT_MIN;
+    MoveList list;
+    populate_legal_moves(list);
+    while(depth){
+        int a = INT_MIN;
+        int b = INT_MAX;
+        Move best_depth_move;
+        int best_depth_board_score = INT_MIN;
+        for(int start = 0; start < list.size(); start++){
+            int cur_best_move_score = INT_MIN;
+            int cur_best_move_index;
+            for(int i = start; i < list.size(); i++){
+                Move move = list[i];
+                int move_score = evaluate_move(move);
+                if(move_score > cur_best_move_score){
+                    cur_best_move_score = move_score;
+                    cur_best_move_index = i;
+                }
+            }
+            make_move(list[cur_best_move_index]);
+            int tree_score = best_score(depth - 1, a, b);
+            undo_last_move();
+            if(turn == Color::WHITE){
+                tree_score -= depth;
+            }
+            else{
+                tree_score += depth;
+            }
+            if(tree_score > best_board_score){
+                best_board_score = tree_score;
+                best_move = list[cur_best_move_index];
+            }
+            if((turn == Color::WHITE && b <= tree_score) || (turn == Color::BLACK && a >= tree_score)){
+                break;
+            }
+            a = std::max(a, tree_score);
+            b = std::min(b, tree_score);
+
+            Move tmp = list[start];
+            list.set(start, list[cur_best_move_index]);
+            list.set(cur_best_move_index, tmp);
+        }
+        depth--;
+    }
+    return std::make_tuple(best_move, best_board_score);
+}
+
+
+//result is undefined if the current board state is a checkmate
+Move Board::best_move(){
+    if(turn_color_in_checkmate()){
+        return Move();
+    }
+    return std::get<0>(ids(MAX_SEARCH_DEPTH));
 }
 
 

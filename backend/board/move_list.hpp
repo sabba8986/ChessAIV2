@@ -12,6 +12,7 @@ private:
 public:
     MoveList();
     void add_move(Move move);
+    void set(int idx, Move move);
     int size();
     Move operator[](int i);
 };

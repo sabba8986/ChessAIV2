@@ -1,4 +1,5 @@
 #include "move.hpp"
+#include "board.hpp"
 #include <cassert>
 
 

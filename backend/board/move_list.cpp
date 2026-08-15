@@ -9,6 +9,11 @@ void MoveList::add_move(Move move){
 }
 
 
+void MoveList::set(int index, Move move){
+    m_moves[index] = move;
+}
+
+
 int MoveList::size(){
     return m_num_moves;
 }

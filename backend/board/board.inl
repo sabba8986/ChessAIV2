@@ -4,40 +4,46 @@
 #include "bitboard_moves.hpp"
 #include "board.hpp"
 
+
+
 template<Color attacker_color>
 std::uint64_t Board::get_attackers(int sq){
+    using namespace bitboard_moves;
+    using enum PieceType;
     constexpr Color defender_color = other_color<attacker_color>();
     std::uint64_t allies = all_pieces[defender_color];
     std::uint64_t enemies = all_pieces[attacker_color];
     std::uint64_t enemy_queen = bitboards[to_piece(attacker_color, PieceType::QUEEN)];
     return 
-        (bitboard_moves::knight(sq, allies, enemies) & bitboards[to_piece(attacker_color, PieceType::KNIGHT)]) | 
-        (bitboard_moves::bishop(sq, allies, enemies) & (bitboards[to_piece(attacker_color, PieceType::BISHOP)] | enemy_queen)) | 
-        (bitboard_moves::rook(sq, allies, enemies) & (bitboards[to_piece(attacker_color, PieceType::ROOK)] | enemy_queen)) | 
-        (bitboard_moves::pawn_captures<defender_color>(sq, enemies) & bitboards[to_piece(attacker_color, PieceType::PAWN)]) |
-        (bitboard_moves::king(sq, allies, enemies) & bitboards[to_piece(attacker_color, PieceType::KING)]);
+        (knight(sq, allies, enemies) & bitboards[to_piece(attacker_color, KNIGHT)]) | 
+        (bishop(sq, allies, enemies) & (bitboards[to_piece(attacker_color, BISHOP)] | enemy_queen)) | 
+        (rook(sq, allies, enemies) & (bitboards[to_piece(attacker_color, ROOK)] | enemy_queen)) | 
+        (pawn_captures<defender_color>(sq, enemies) & bitboards[to_piece(attacker_color, PAWN)]) |
+        (king(sq, allies, enemies) & bitboards[to_piece(attacker_color, KING)]);
 }
 
 
 template<Color attacker_color>
 bool Board::is_attacked(int sq){
+    using namespace bitboard_moves;
+    using enum PieceType;
     constexpr Color defender_color = other_color(attacker_color);
     std::uint64_t allies = all_pieces[defender_color];
     std::uint64_t enemies = all_pieces[attacker_color];
-    std::uint64_t enemy_queen = bitboards[to_piece(attacker_color, PieceType::QUEEN)];
-    if(bitboard_moves::rook(sq, allies, enemies) & (bitboards[to_piece(attacker_color, PieceType::ROOK)] | enemy_queen)){
+    std::uint64_t enemy_queen = bitboards[to_piece(attacker_color, QUEEN)];
+    if(rook(sq, allies, enemies) & (bitboards[to_piece(attacker_color, ROOK)] | enemy_queen)){
         return true;
     } 
-    else if(bitboard_moves::bishop(sq, allies, enemies) & (bitboards[to_piece(attacker_color, PieceType::BISHOP)] | enemy_queen)){
+    else if(bishop(sq, allies, enemies) & (bitboards[to_piece(attacker_color, BISHOP)] | enemy_queen)){
         return true;
     }
-    else if(bitboard_moves::knight(sq, allies, enemies) & bitboards[to_piece(attacker_color, PieceType::KNIGHT)]){
+    else if(knight(sq, allies, enemies) & bitboards[to_piece(attacker_color, KNIGHT)]){
         return true;
     }
-    else if(bitboard_moves::pawn_captures<defender_color>(sq, enemies) & bitboards[to_piece(attacker_color, PieceType::PAWN)]){
+    else if(pawn_captures<defender_color>(sq, enemies) & bitboards[to_piece(attacker_color, PAWN)]){
         return true;
     }
-    else if(bitboard_moves::king(sq, allies, enemies) & bitboards[to_piece(attacker_color, PieceType::KING)]){
+    else if(king(sq, allies, enemies) & bitboards[to_piece(attacker_color, KING)]){
         return true;
     }
     return false;
@@ -91,12 +97,13 @@ std::uint64_t Board::get_promotion_row(){
 template<Color c>
 void Board::recalculate_pinned(){
     using namespace tables::pins;
+    using enum PieceType;
     constexpr Color enemy_color = other_color(c);
     int king_sq = get_king_pos<c>();
     pinned = 0;
-    std::uint64_t enemy_queens = bitboards[to_piece(enemy_color, PieceType::QUEEN)];
-    std::uint64_t diagonal_attackers = (bitboards[to_piece(enemy_color, PieceType::BISHOP)] | enemy_queens) & diagonal_mask[king_sq];
-    std::uint64_t straight_attackers = (bitboards[to_piece(enemy_color, PieceType::ROOK)] | enemy_queens) & straight_mask[king_sq];
+    std::uint64_t enemy_queens = bitboards[to_piece(enemy_color, QUEEN)];
+    std::uint64_t diagonal_attackers = (bitboards[to_piece(enemy_color, BISHOP)] | enemy_queens) & diagonal_mask[king_sq];
+    std::uint64_t straight_attackers = (bitboards[to_piece(enemy_color, ROOK)] | enemy_queens) & straight_mask[king_sq];
     std::uint64_t all_occ = all_pieces[Color::WHITE] | all_pieces[Color::BLACK];
     while(diagonal_attackers){
         int pinner_sq = std::countr_zero(diagonal_attackers);
@@ -499,6 +506,4 @@ void Board::populate_legal_moves(int sq, MoveList& list){
         castles ^= (1ull << dest);
     }
 }
-
-
 #endif

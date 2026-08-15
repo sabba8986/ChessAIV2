@@ -8,19 +8,21 @@
 #include "history.hpp"
 #include <cstdint>
 #include <array>
-#include <bit>
 #include "board_state.hpp"
 #include "perft_results.hpp"
 #include <string>
+#include <tuple>
 #include "fen_error.hpp"
 #include <expected>
 
 class Board{
     static constexpr std::size_t MAX_PLYS = 128;
+    static constexpr int MAX_SEARCH_DEPTH = 6;
     static constexpr std::uint8_t white_left_castle_allowed_flag = 1;
     static constexpr std::uint8_t white_right_castle_allowed_flag = 2;
     static constexpr std::uint8_t black_left_castle_allowed_flag = 4;
     static constexpr std::uint8_t black_right_castle_allowed_flag = 8;
+    
     
     EnumArr<std::uint64_t, 15> bitboards;
     EnumArr<std::uint64_t, 2> all_pieces;
@@ -116,7 +118,9 @@ class Board{
     template<Color c>
     int get_king_pos();
 
-    
+    int best_score(int depth, int a, int b);
+    std::tuple<Move, int> ids(int depth);
+    int evaluate_move(Move move);
 public:
     Board();
     constexpr static std::size_t get_max_plys(){ return MAX_PLYS; }
@@ -131,10 +135,9 @@ public:
     template<Color c>
     bool in_check();
 
-    bool in_check(Color c);
-
 
     bool turn_color_in_check();
+    bool turn_color_in_checkmate();
     void reset();
     BoardState get_board_state();
     std::size_t get_cur_ply();
@@ -145,6 +148,8 @@ public:
     PerftResults perft(int depth);
     std::uint64_t fast_perft(int depth);
     std::expected<void, FENError> load_FEN(const std::string& str);
+    int score();
+    Move best_move();
     friend struct BoardState;
 };
 
